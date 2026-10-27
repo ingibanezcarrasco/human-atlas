@@ -127,11 +127,16 @@ export interface Part {
   conceptId: string;
   system: SystemId;
   chunk: number;
+  /** Byte offsets and lengths of the meshopt-encoded buffers within the decompressed chunk. */
   positions: number;
+  positionsBytes: number;
   normals: number;
+  normalsBytes: number;
   indices: number;
+  indicesBytes: number;
   vertexCount: number;
   indexCount: number;
+  /** Also the quantization box: positions are uint16 over the largest extent from bounds[0]. */
   bounds: [number[], number[]];
 }
 export interface Concept {
@@ -146,7 +151,8 @@ export interface Atlas {
   scope?: string;
   parts: Part[];
   concepts: Concept[];
-  chunks: { url: string; bytes: number; gzip?: string; gzipBytes?: number }[];
+  /** Gzipped chunks in load-priority order; `bytes` is the decompressed size. */
+  chunks: { url: string; bytes: number; gzipBytes: number }[];
   triangles: number;
 }
 export type View = 'three-quarter' | 'front' | 'back' | 'side';

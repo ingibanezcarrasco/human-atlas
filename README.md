@@ -43,7 +43,7 @@ Validation covers mesh buffers, names and concept membership, nonoverlapping exp
 
 The current viewer uses **BodyParts3D 4.0**, an adult male reference anatomy, licensed **CC BY 4.0**. It does not represent every human structure or variation. Individual source meshes are distinct from named concepts, which may group multiple meshes. Descriptions distinguish general system context from individual organ explanations.
 
-Geometry is simplified for browser performance while retaining every source mesh. The packaged model contains 2,288,268 triangles and downloads approximately 33 MB of compressed geometry. Full credits, source links, and adaptation details are in [ATTRIBUTION.md](public/ATTRIBUTION.md).
+Geometry is simplified for browser performance while retaining every source mesh. The packaged model contains 2,288,268 triangles and downloads about 15 MB of compressed geometry, in chunks ordered so the skeleton and organs appear before the muscles and vessels. Full credits, source links, and adaptation details are in [ATTRIBUTION.md](public/ATTRIBUTION.md).
 
 This is an educational explorer, not a diagnostic or surgical tool.
 
@@ -55,7 +55,7 @@ The optional WebMCP tools expose anatomy search and inspection in compatible bro
 
 ## Rebuilding geometry
 
-The repository includes browser-ready geometry. Rebuilding it is optional: obtain the official BodyParts3D OBJ archive and English metadata tables, prepare the joined concepts and display-system mappings, run `scripts/convert-anatomy.py`, then `node scripts/optimize-anatomy.mjs` and `node scripts/compress-models.mjs`. Simplification uses a 0.2% relative error limit per structure.
+The repository includes browser-ready geometry. Rebuilding it is optional: obtain the official BodyParts3D OBJ archive and English metadata tables, prepare the joined concepts and display-system mappings, run `scripts/convert-anatomy.py`, then `node scripts/optimize-anatomy.mjs` and `node scripts/encode-models.mjs`. Simplification uses a 0.2% relative error limit per structure. Encoding quantizes positions to 16 bits within each structure's bounds (error under 0.1 mm) and normals to 8 bits, reorders vertices for the GPU cache, and applies meshoptimizer's codecs plus gzip.
 
 ## Spanish names
 

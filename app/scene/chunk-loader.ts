@@ -1,14 +1,53 @@
 import * as T from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import type { Atlas } from '../anatomy';
+import { MeshoptDecoder } from 'meshoptimizer/decoder';
+import type { Atlas, Part } from '../anatomy';
 import { ViewerError } from '../errors';
 import { decodeModelResponse } from '../model-download';
 
 export async function fetchChunk(atlas: Atlas, ci: number, signal: AbortSignal) {
-  const chunk = atlas.chunks[ci],
-    compressed = !!chunk.gzip && typeof DecompressionStream !== 'undefined';
-  const response = await fetch(compressed ? chunk.gzip! : chunk.url, { signal });
-  return decodeModelResponse(response, chunk.bytes, compressed);
+  const chunk = atlas.chunks[ci];
+  const [buffer] = await Promise.all([
+    fetch(chunk.url, { signal }).then((r) => decodeModelResponse(r, chunk.bytes, true)),
+    MeshoptDecoder.ready,
+  ]);
+  return buffer;
+}
+
+/** Decodes one part's buffers (see scripts/encode-models.mjs for the format). */
+function decodePart(buffer: ArrayBuffer, p: Part) {
+  const source = (offset: number, length: number) => new Uint8Array(buffer, offset, length);
+  const quantized = new Uint16Array(p.vertexCount * 4),
+    packedNormals = new Int8Array(p.vertexCount * 4),
+    indices = new Uint32Array(p.indexCount);
+  MeshoptDecoder.decodeVertexBuffer(
+    new Uint8Array(quantized.buffer),
+    p.vertexCount,
+    8,
+    source(p.positions, p.positionsBytes),
+  );
+  MeshoptDecoder.decodeVertexBuffer(
+    new Uint8Array(packedNormals.buffer),
+    p.vertexCount,
+    4,
+    source(p.normals, p.normalsBytes),
+  );
+  MeshoptDecoder.decodeIndexBuffer(
+    new Uint8Array(indices.buffer),
+    p.indexCount,
+    4,
+    source(p.indices, p.indicesBytes),
+  );
+  const [lo, hi] = p.bounds,
+    scale = (Math.max(hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2]) || 1) / 65535;
+  const positions = new Float32Array(p.vertexCount * 3),
+    normals = new Int8Array(p.vertexCount * 3);
+  for (let v = 0; v < p.vertexCount; v++)
+    for (let k = 0; k < 3; k++) {
+      positions[v * 3 + k] = lo[k] + quantized[v * 4 + k] * scale;
+      normals[v * 3 + k] = packedNormals[v * 4 + k];
+    }
+  return { positions, normals, indices };
 }
 
 /**
@@ -25,17 +64,12 @@ export function buildChunkGeometry(
     groups = new Map<string, T.BufferGeometry[]>();
   atlas.parts.forEach((p, i) => {
     if (p.chunk !== ci) return;
-    const g = new T.BufferGeometry();
-    g.setAttribute(
-      'position',
-      new T.BufferAttribute(new Float32Array(buffer, p.positions, p.vertexCount * 3), 3),
-    );
-    // GPU normalized signed-short normals keep the complete atlas compact in memory.
-    g.setAttribute(
-      'normal',
-      new T.BufferAttribute(new Int16Array(buffer, p.normals, p.vertexCount * 3), 3, true),
-    );
-    g.setIndex(new T.BufferAttribute(new Uint32Array(buffer, p.indices, p.indexCount), 1));
+    const g = new T.BufferGeometry(),
+      { positions, normals, indices } = decodePart(buffer, p);
+    g.setAttribute('position', new T.BufferAttribute(positions, 3));
+    // GPU-normalized signed-byte normals keep the complete atlas compact in memory.
+    g.setAttribute('normal', new T.BufferAttribute(normals, 3, true));
+    g.setIndex(new T.BufferAttribute(indices, 1));
     g.boundingBox = bounds[i].clone();
     g.computeBoundingSphere();
     parts.set(i, g);
