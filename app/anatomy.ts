@@ -160,6 +160,7 @@ export interface SceneState {
   rotate: boolean;
   reset: number;
 }
+export type SetSceneState = (update: (s: SceneState) => SceneState) => void;
 export const DEFAULT_VISIBLE: SystemId[] = [
   'cardiac',
   'sensory',
