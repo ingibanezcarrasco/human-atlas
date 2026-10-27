@@ -15,6 +15,10 @@ Source OBJ comments mention an older CC BY-SA 2.1 Japan license. The official cu
 
 BodyParts3D represents an adult male reference anatomy based on TARO MRI and anatomical illustration refinements. It is not a complete model of every possible human anatomical structure or variation. This interface is educational and is not a clinical tool.
 
+## Spanish anatomical names
+
+`models/names-es.json` gives a Spanish name for every concept and mesh name. About 700 come from Wikidata labels matched by FMA ID (CC0, https://www.wikidata.org/wiki/Property:P1402), with corrections; left/right variants are composed from them; the remaining names were translated for this project following Spanish anatomical terminology. Sources and the build script are in `scripts/i18n/` and `scripts/build-names-es.mjs`. Translations are educational, not a clinical reference.
+
 ## Historical assets (not included in the current release)
 
 Earlier repository revisions included female reference anatomy: Kristen Browne and Heidi Schlehlein, Human Reference Atlas / HuBMAP, _3D Reference Organ Set for Female v1.5_ (2023). CC BY 4.0. Geometry adapted for this viewer.

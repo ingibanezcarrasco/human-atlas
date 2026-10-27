@@ -1854,7 +1854,15 @@ h1 .edition {
     margin: 0;
   }
 }
-/* Spanish headings use sentence case, not the English title case applied above. */
-:lang(es) .about-sheet .structure-title {
+/* Spanish uses sentence case: names arrive already capitalized, so skip English title case. */
+:lang(es) .structure-title,
+:lang(es) .search-result-name,
+:lang(es) .part-hover {
   text-transform: none;
+}
+.structure-source-name {
+  font-size: 12px;
+  color: #87929d;
+  text-transform: capitalize;
+  margin-top: -6px;
 }

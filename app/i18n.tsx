@@ -393,12 +393,33 @@ interface I18n {
   t: Messages;
   /** Formats a count with the active language's digit grouping (2,234 / 2.234). */
   n: (value: number) => string;
+  /**
+   * Display name of an atlas structure from its (English) source name. Spanish names load on
+   * demand; until then, or for any name without a translation, the English name is returned.
+   */
+  name: (english: string) => string;
+}
+
+/** Lowercase and strip accents so "femur" matches "fémur". */
+export function fold(text: string) {
+  return text.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
 }
 
 const I18nContext = createContext<I18n | null>(null);
 
 export function I18nProvider({ children }: { children: ReactNode }) {
-  const [lang, setLang] = useState<Lang>(initialLang);
+  const [lang, setLang] = useState<Lang>(initialLang),
+    [spanishNames, setSpanishNames] = useState<Record<string, string> | null>(null);
+  useEffect(() => {
+    if (lang !== 'es' || spanishNames) return;
+    const abort = new AbortController();
+    fetch('/models/names-es.json', { signal: abort.signal })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((names) => names && setSpanishNames(names))
+      // Without the file the viewer keeps working with the English names.
+      .catch(() => {});
+    return () => abort.abort();
+  }, [lang, spanishNames]);
   useEffect(() => {
     document.documentElement.lang = lang;
     try {
@@ -410,7 +431,13 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   const t = MESSAGES[lang];
   // es-ES omits the thousands separator for four-digit numbers; always group for consistency.
   const n = (value: number) => value.toLocaleString(t.locale, { useGrouping: 'always' });
-  return <I18nContext.Provider value={{ lang, setLang, t, n }}>{children}</I18nContext.Provider>;
+  const name = (english: string) => {
+    const spanish = lang === 'es' ? spanishNames?.[english.toLowerCase()] : undefined;
+    return spanish ? spanish.charAt(0).toLocaleUpperCase('es') + spanish.slice(1) : english;
+  };
+  return (
+    <I18nContext.Provider value={{ lang, setLang, t, n, name }}>{children}</I18nContext.Provider>
+  );
 }
 
 export function useI18n() {

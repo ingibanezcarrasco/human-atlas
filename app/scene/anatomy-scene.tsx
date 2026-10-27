@@ -17,6 +17,8 @@ interface Props {
   onError: (code: ErrorCode) => void;
   /** Accessible description of the canvas, in the active language. */
   label: string;
+  /** Display name for a structure's source name, used by the hover tooltip. */
+  nameOf: (name: string) => string;
 }
 export default function AnatomyScene({
   atlas,
@@ -25,12 +27,15 @@ export default function AnatomyScene({
   onProgress,
   onError,
   label,
+  nameOf,
 }: Props) {
   const host = useRef<HTMLDivElement>(null),
     latest = useRef(state),
-    select = useRef(onSelect);
+    select = useRef(onSelect),
+    displayName = useRef(nameOf);
   latest.current = state;
   select.current = onSelect;
+  displayName.current = nameOf;
   useEffect(() => {
     const el = host.current!;
     let disposed = false,
@@ -228,7 +233,7 @@ export default function AnatomyScene({
       hover.hidden = index < 0;
       renderer.domElement.style.cursor = index < 0 ? 'grab' : 'pointer';
       if (index >= 0) {
-        hover.textContent = atlas.parts[index].name;
+        hover.textContent = displayName.current(atlas.parts[index].name);
         hover.style.left = `${Math.max(8, Math.min(x + 14, el.clientWidth - 260))}px`;
         hover.style.top = `${Math.max(8, Math.min(y + 18, el.clientHeight - 55))}px`;
       }

@@ -32,7 +32,7 @@ const initial: SceneState = {
   reset: 0,
 };
 export default function Home() {
-  const { lang, setLang, t, n } = useI18n();
+  const { lang, setLang, t, n, name } = useI18n();
   const [atlas, setAtlas] = useState<Atlas | null>(null),
     [state, setState] = useState(initial),
     [progress, setProgress] = useState(0),
@@ -147,6 +147,7 @@ export default function Home() {
           }}
           onError={setError}
           label={t.canvas}
+          nameOf={name}
         />
       )}
       <div className="vignette" />
@@ -213,7 +214,7 @@ export default function Home() {
         />
       )}
       <ViewControls state={state} setState={setState} onReset={reset} />
-      <SceneCaption state={state} chosenName={chosen?.name} />
+      <SceneCaption state={state} chosenName={chosen ? name(chosen.name) : undefined} />
       <BottomDock
         state={state}
         setState={setState}

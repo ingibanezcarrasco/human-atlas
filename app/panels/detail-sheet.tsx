@@ -26,7 +26,7 @@ export function DetailSheet({
   selectedParts,
   onChoosePart,
 }: Props) {
-  const { t, n } = useI18n();
+  const { lang, t, n, name } = useI18n();
   const detailTitle = useRef<HTMLHeadingElement>(null);
   const selected = selectedParts[0],
     system = SYSTEMS.find((s) => s.id === selected?.system),
@@ -43,8 +43,13 @@ export function DetailSheet({
           <div className="detail-accent" style={{ background: system?.color }} />
           <div className="eyebrow">{system ? t.systems[system.id].name : t.detail.eyebrow}</div>
           <SheetTitle ref={detailTitle} tabIndex={-1} className="structure-title">
-            {chosen?.name}
+            {chosen && name(chosen.name)}
           </SheetTitle>
+          {chosen && lang !== 'en' && name(chosen.name) !== chosen.name && (
+            <span className="structure-source-name" lang="en">
+              {chosen.name}
+            </span>
+          )}
         </div>
         <div className="detail-scroll" key={`${chosen?.id}-${state.isolate}`}>
           <SheetDescription className="structure-description">
@@ -66,7 +71,7 @@ export function DetailSheet({
               <h3>{t.detail.included}</h3>
               {selectedParts.slice(0, MAX_MEMBERS).map((p) => (
                 <Button variant="ghost" key={p.id} onClick={() => onChoosePart(p.id)}>
-                  <span>{p.name}</span>
+                  <span>{name(p.name)}</span>
                   <ChevronRight size={14} />
                 </Button>
               ))}

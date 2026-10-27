@@ -12,7 +12,7 @@ An interactive 3D anatomy explorer built with React, Three.js, and shadcn/ui. Ta
 - Search anatomical names and source identifiers.
 - Isolate a selected structure and read its details.
 - Use compact controls and detail panels on mobile.
-- Switch the interface between English and Spanish (follows the browser language by default). Anatomical names are still shown in English.
+- Switch between English and Spanish (follows the browser language by default), including the 3,432 anatomical names; Spanish search also matches English names.
 
 ## Run locally
 
@@ -56,6 +56,10 @@ The optional WebMCP tools expose anatomy search and inspection in compatible bro
 ## Rebuilding geometry
 
 The repository includes browser-ready geometry. Rebuilding it is optional: obtain the official BodyParts3D OBJ archive and English metadata tables, prepare the joined concepts and display-system mappings, run `scripts/convert-anatomy.py`, then `node scripts/optimize-anatomy.mjs` and `node scripts/compress-models.mjs`. Simplification uses a 0.2% relative error limit per structure.
+
+## Spanish names
+
+`public/models/names-es.json` is generated from Wikidata labels (`scripts/i18n/wikidata-fma-es.tsv`, refreshed with `node scripts/fetch-wikidata-names.mjs`), hand corrections (`names-es-overrides.tsv`) and hand translations of left/right templates (`names-es.tsv`). Edit those files and run `node scripts/build-names-es.mjs`; `npm run validate` fails if the JSON is stale or any name is untranslated.
 
 ## Deploy
 

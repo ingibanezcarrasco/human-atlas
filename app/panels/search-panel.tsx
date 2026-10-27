@@ -10,7 +10,7 @@ import {
   ComboboxEmpty,
 } from '@/components/ui/combobox';
 import type { Atlas, Concept } from '../anatomy';
-import { useI18n } from '../i18n';
+import { fold, useI18n } from '../i18n';
 
 /** Suggestions shown before the user types anything. */
 const MAJOR_ORGANS = [
@@ -34,19 +34,25 @@ interface Props {
 }
 
 export function SearchPanel({ atlas, query, onQueryChange, onChoose, onClose }: Props) {
-  const { t } = useI18n();
+  const { t, name } = useI18n();
   const results = useMemo(() => {
     if (!atlas) return [];
-    const term = query.toLowerCase().trim();
+    const term = fold(query.trim());
     if (!term)
-      return MAJOR_ORGANS.map((name) =>
-        atlas.concepts.find((c) => c.name.toLowerCase() === name),
+      return MAJOR_ORGANS.map((organ) =>
+        atlas.concepts.find((c) => c.name.toLowerCase() === organ),
       ).filter((x): x is Concept => !!x);
+    // Match the source (English) name, the displayed name and the atlas ID.
     return atlas.concepts
-      .filter((c) => c.name.toLowerCase().includes(term) || c.id.toLowerCase().includes(term))
-      .sort((a, b) => a.name.length - b.name.length)
+      .filter(
+        (c) =>
+          fold(c.name).includes(term) ||
+          fold(name(c.name)).includes(term) ||
+          c.id.toLowerCase().includes(term),
+      )
+      .sort((a, b) => name(a.name).length - name(b.name).length)
       .slice(0, MAX_RESULTS);
-  }, [atlas, query]);
+  }, [atlas, query, name]);
   return (
     <section className="search-panel glass" aria-label={t.search.region}>
       <div className="panel-heading">
@@ -68,7 +74,7 @@ export function SearchPanel({ atlas, query, onQueryChange, onChoose, onClose }: 
         }}
         inputValue={query}
         onInputValueChange={onQueryChange}
-        itemToStringLabel={(c) => c.name}
+        itemToStringLabel={(c) => name(c.name)}
         filter={null}
         open
         onOpenChange={(open) => {
@@ -86,7 +92,7 @@ export function SearchPanel({ atlas, query, onQueryChange, onChoose, onClose }: 
           <ComboboxList>
             {(c: Concept) => (
               <ComboboxItem key={c.id} value={c}>
-                <span className="search-result-name">{c.name}</span>
+                <span className="search-result-name">{name(c.name)}</span>
                 <span className="small-number">{t.search.pieces(c.elements.length)}</span>
               </ComboboxItem>
             )}
