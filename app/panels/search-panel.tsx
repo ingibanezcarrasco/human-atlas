@@ -10,6 +10,7 @@ import {
   ComboboxEmpty,
 } from '@/components/ui/combobox';
 import type { Atlas, Concept } from '../anatomy';
+import { useI18n } from '../i18n';
 
 /** Suggestions shown before the user types anything. */
 const MAJOR_ORGANS = [
@@ -33,6 +34,7 @@ interface Props {
 }
 
 export function SearchPanel({ atlas, query, onQueryChange, onChoose, onClose }: Props) {
+  const { t } = useI18n();
   const results = useMemo(() => {
     if (!atlas) return [];
     const term = query.toLowerCase().trim();
@@ -46,10 +48,15 @@ export function SearchPanel({ atlas, query, onQueryChange, onChoose, onClose }: 
       .slice(0, MAX_RESULTS);
   }, [atlas, query]);
   return (
-    <section className="search-panel glass" aria-label="Find anatomy">
+    <section className="search-panel glass" aria-label={t.search.region}>
       <div className="panel-heading">
-        <span>Find a structure</span>
-        <Button variant="ghost" className="icon-button" onClick={onClose} aria-label="Close search">
+        <span>{t.search.heading}</span>
+        <Button
+          variant="ghost"
+          className="icon-button"
+          onClick={onClose}
+          aria-label={t.search.close}
+        >
           <X size={18} />
         </Button>
       </div>
@@ -70,29 +77,23 @@ export function SearchPanel({ atlas, query, onQueryChange, onChoose, onClose }: 
       >
         <ComboboxInput
           autoFocus
-          placeholder="Heart, femur, cranial nerve…"
-          aria-label="Search named anatomical structures"
+          placeholder={t.search.placeholder}
+          aria-label={t.search.input}
           showTrigger={false}
         />
         <ComboboxContent className="anatomy-search-results">
-          <ComboboxEmpty>No structures match your search.</ComboboxEmpty>
+          <ComboboxEmpty>{t.search.empty}</ComboboxEmpty>
           <ComboboxList>
             {(c: Concept) => (
               <ComboboxItem key={c.id} value={c}>
                 <span className="search-result-name">{c.name}</span>
-                <span className="small-number">
-                  {c.elements.length} {c.elements.length === 1 ? 'piece' : 'pieces'}
-                </span>
+                <span className="small-number">{t.search.pieces(c.elements.length)}</span>
               </ComboboxItem>
             )}
           </ComboboxList>
         </ComboboxContent>
       </Combobox>
-      <p className="search-note">
-        {query
-          ? `Showing up to ${MAX_RESULTS} matches. Refine your search to find smaller structures.`
-          : 'Start with a major organ, or search every named structure.'}
-      </p>
+      <p className="search-note">{query ? t.search.limited(MAX_RESULTS) : t.search.hint}</p>
     </section>
   );
 }

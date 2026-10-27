@@ -12,6 +12,8 @@ import { LayersPanel } from './panels/layers-panel';
 import { LoadStatus } from './panels/load-status';
 import { SearchPanel } from './panels/search-panel';
 import { ViewControls } from './panels/view-controls';
+import { ViewerError, errorCode, type ErrorCode } from './errors';
+import { useI18n } from './i18n';
 import {
   DEFAULT_VISIBLE,
   SYSTEMS,
@@ -30,10 +32,11 @@ const initial: SceneState = {
   reset: 0,
 };
 export default function Home() {
+  const { lang, setLang, t, n } = useI18n();
   const [atlas, setAtlas] = useState<Atlas | null>(null),
     [state, setState] = useState(initial),
     [progress, setProgress] = useState(0),
-    [error, setError] = useState(''),
+    [error, setError] = useState<ErrorCode | null>(null),
     [panel, setPanel] = useState<'layers' | 'search' | null>(null),
     [details, setDetails] = useState(false),
     [about, setAbout] = useState(false),
@@ -42,19 +45,19 @@ export default function Home() {
   useEffect(() => {
     const abort = new AbortController();
     setProgress(0);
-    setError('');
+    setError(null);
     setAtlas(null);
     setChosen(null);
     setDetails(false);
     setState({ ...initial, visible: DEFAULT_VISIBLE });
     fetch('/models/atlas.json', { signal: abort.signal })
       .then((r) => {
-        if (!r.ok) throw new Error('The anatomy catalogue could not be loaded.');
+        if (!r.ok) throw new ViewerError('catalogue', 'The anatomy catalogue could not be loaded.');
         return r.json();
       })
       .then((data) => setAtlas(data as Atlas))
       .catch((e) => {
-        if (e.name !== 'AbortError') setError(e.message);
+        if (e.name !== 'AbortError') setError(errorCode(e, 'catalogue'));
       });
     return () => abort.abort();
   }, []);
@@ -138,17 +141,18 @@ export default function Home() {
           atlas={atlas}
           state={{ ...state, inspectorOpen: details && selectedParts.length > 0 }}
           onSelect={choosePart}
-          onProgress={(n) => {
-            setProgress(n);
-            if (n === 100) setError('');
+          onProgress={(percent) => {
+            setProgress(percent);
+            if (percent === 100) setError(null);
           }}
           onError={setError}
+          label={t.canvas}
         />
       )}
       <div className="vignette" />
       <header className="identity">
         <div className="eyebrow">
-          <span className="status-dot" /> INTERACTIVE ANATOMY
+          <span className="status-dot" /> {t.header.eyebrow}
         </div>
         <h1>
           Human Atlas
@@ -157,25 +161,33 @@ export default function Home() {
           </Badge>
         </h1>
         <div className="identity-meta">
-          {atlas ? atlas.parts.length.toLocaleString() : '2,234'} modeled pieces <span>·</span>{' '}
-          BodyParts3D
+          {n(atlas?.parts.length ?? 2234)} {t.header.pieces} <span>·</span> BodyParts3D
         </div>
       </header>
-      <nav className="top-actions" aria-label="Explorer panels">
+      <nav className="top-actions" aria-label={t.header.panels}>
         <Button
           variant="ghost"
           className={panel === 'search' ? 'active' : ''}
           onClick={() => openPanel('search')}
-          aria-label="Search anatomy"
+          aria-label={t.header.search}
         >
           <Search size={18} />
-          <span>Find a structure</span>
+          <span>{t.header.find}</span>
           <kbd>/</kbd>
         </Button>
         <Button
           variant="ghost"
+          className="icon-button lang-toggle"
+          aria-label={t.switchTo}
+          title={t.switchTo}
+          onClick={() => setLang(lang === 'es' ? 'en' : 'es')}
+        >
+          {lang === 'es' ? 'EN' : 'ES'}
+        </Button>
+        <Button
+          variant="ghost"
           className="icon-button"
-          aria-label="About this atlas"
+          aria-label={t.header.about}
           onClick={openAbout}
         >
           <Info size={18} />
@@ -210,11 +222,11 @@ export default function Home() {
       />
       <footer className="studio-footer">
         <span>
-          {state.explode > 0.8 ? 'Drag to pan' : 'Drag to orbit'} <b>·</b> Pinch to zoom <b>·</b>{' '}
-          Tap to inspect
+          {state.explode > 0.8 ? t.footer.pan : t.footer.orbit} <b>·</b> {t.footer.zoom} <b>·</b>{' '}
+          {t.footer.inspect}
         </span>
         <Button variant="ghost" onClick={openAbout}>
-          Source & credits <ArrowUpRight size={12} />
+          {t.footer.credits} <ArrowUpRight size={12} />
         </Button>
       </footer>
       <LoadStatus progress={progress} error={error} partCount={atlas?.parts.length} />

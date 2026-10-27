@@ -4,6 +4,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { createExplosionLayout } from '../explosion-layout';
 import { PointerTap } from '../pointer-tap';
 import { SYSTEMS, type Atlas, type SceneState } from '../anatomy';
+import { errorCode, type ErrorCode } from '../errors';
 import { buildChunkGeometry, fetchChunk, loadAll } from './chunk-loader';
 import { findTarget, hasSolidVisible, projectTargets, type HitTarget } from './hit-targets';
 import { createMarkers, createPartMaterial } from './part-material';
@@ -13,9 +14,18 @@ interface Props {
   state: SceneState;
   onSelect: (id: string) => void;
   onProgress: (n: number) => void;
-  onError: (s: string) => void;
+  onError: (code: ErrorCode) => void;
+  /** Accessible description of the canvas, in the active language. */
+  label: string;
 }
-export default function AnatomyScene({ atlas, state, onSelect, onProgress, onError }: Props) {
+export default function AnatomyScene({
+  atlas,
+  state,
+  onSelect,
+  onProgress,
+  onError,
+  label,
+}: Props) {
   const host = useRef<HTMLDivElement>(null),
     latest = useRef(state),
     select = useRef(onSelect);
@@ -42,9 +52,7 @@ export default function AnatomyScene({ atlas, state, onSelect, onProgress, onErr
         powerPreference: 'high-performance',
       });
     } catch {
-      onError(
-        'This browser could not start the 3D viewer. Please try a browser with WebGL enabled.',
-      );
+      onError('webgl');
       return;
     }
     renderer.setPixelRatio(Math.min(devicePixelRatio, innerWidth < 768 ? 1.5 : 2));
@@ -53,10 +61,6 @@ export default function AnatomyScene({ atlas, state, onSelect, onProgress, onErr
     renderer.toneMapping = T.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.12;
     el.appendChild(renderer.domElement);
-    renderer.domElement.setAttribute(
-      'aria-label',
-      'Interactive human anatomy. Drag to orbit, pinch or scroll to zoom, and tap a structure to inspect it.',
-    );
     const scene = new T.Scene(),
       camera = new T.PerspectiveCamera(34, 1, 0.005, 100),
       controls = new OrbitControls(camera, renderer.domElement);
@@ -147,7 +151,7 @@ export default function AnatomyScene({ atlas, state, onSelect, onProgress, onErr
           dirty = true;
         }
       } catch (e) {
-        if (!disposed) onError(e instanceof Error ? e.message : 'Could not load the anatomy.');
+        if (!disposed) onError(errorCode(e, 'load'));
       }
     })();
     const fit = (view: string, extent = 0) => {
@@ -456,7 +460,7 @@ export default function AnatomyScene({ atlas, state, onSelect, onProgress, onErr
     animate();
     const contextLost = (e: Event) => {
       e.preventDefault();
-      onError('The 3D session was paused by your device. Reload to continue.');
+      onError('contextLost');
     };
     renderer.domElement.addEventListener('webglcontextlost', contextLost);
     return () => {
@@ -484,5 +488,8 @@ export default function AnatomyScene({ atlas, state, onSelect, onProgress, onErr
       renderer.domElement.remove();
     };
   }, [atlas]);
+  useEffect(() => {
+    host.current?.querySelector('canvas')?.setAttribute('aria-label', label);
+  }, [atlas, label]);
   return <div className="scene" ref={host} />;
 }

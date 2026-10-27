@@ -1854,3 +1854,7 @@ h1 .edition {
     margin: 0;
   }
 }
+/* Spanish headings use sentence case, not the English title case applied above. */
+:lang(es) .about-sheet .structure-title {
+  text-transform: none;
+}

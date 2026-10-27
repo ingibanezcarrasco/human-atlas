@@ -1,5 +1,7 @@
 import { Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import type { ErrorCode } from '../errors';
+import { useI18n } from '../i18n';
 
 export function LoadStatus({
   progress,
@@ -7,15 +9,16 @@ export function LoadStatus({
   partCount,
 }: {
   progress: number;
-  error: string;
+  error: ErrorCode | null;
   partCount?: number;
 }) {
+  const { t, n } = useI18n();
   if (error)
     return (
       <div className="loading glass error" role="alert">
-        <p>{error}</p>
+        <p>{t.errors[error]}</p>
         <Button variant="ghost" onClick={() => location.reload()}>
-          Reload viewer
+          {t.loading.reload}
         </Button>
       </div>
     );
@@ -24,10 +27,8 @@ export function LoadStatus({
     <div className="loading glass" role="status">
       <Activity size={18} />
       <div>
-        <strong>Preparing the anatomy</strong>
-        <span>
-          {progress}% · Loading {partCount?.toLocaleString() ?? '2,234'} pieces
-        </span>
+        <strong>{t.loading.title}</strong>
+        <span>{t.loading.progress(progress, n(partCount ?? 2234))}</span>
         <div className="loading-track">
           <i style={{ width: `${progress}%` }} />
         </div>

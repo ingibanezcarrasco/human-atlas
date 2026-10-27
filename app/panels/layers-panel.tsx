@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { SYSTEMS, type SceneState, type SetSceneState, type SystemId } from '../anatomy';
+import { useI18n } from '../i18n';
 
 const ORGAN_SYSTEMS: SystemId[] = [
   'cardiac',
@@ -34,20 +35,21 @@ export function LayersPanel({
   onClose,
   onToggle,
 }: Props) {
+  const { t, n } = useI18n();
   const show = (visible: SystemId[]) =>
     setState((s) => ({ ...s, selected: [], isolate: false, visible }));
   return (
     <section
       className={`layers-panel glass ${mobileOpen ? 'mobile-open' : ''}`}
-      aria-label="Anatomical layers"
+      aria-label={t.layers.region}
     >
       <div className="panel-heading">
-        <span>Systems</span>
+        <span>{t.layers.heading}</span>
         <Button
           variant="ghost"
           className="mobile-only icon-button"
           onClick={onClose}
-          aria-label="Close systems"
+          aria-label={t.layers.close}
         >
           <X size={18} />
         </Button>
@@ -61,14 +63,14 @@ export function LayersPanel({
           aria-pressed={systems.every((x) => state.visible.includes(x.id))}
           onClick={() => show(systems.map((x) => x.id))}
         >
-          All
+          {t.layers.all}
         </Button>
         <Button
           variant="ghost"
           aria-pressed={state.visible.length === 1 && state.visible[0] === 'skeletal'}
           onClick={() => show(['skeletal'])}
         >
-          Skeleton
+          {t.layers.skeleton}
         </Button>
         <Button
           variant="ghost"
@@ -78,7 +80,7 @@ export function LayersPanel({
           }
           onClick={() => show(ORGAN_SYSTEMS)}
         >
-          Organs
+          {t.layers.organs}
         </Button>
       </div>
       <div className="system-list">
@@ -87,25 +89,25 @@ export function LayersPanel({
             <Button
               variant="ghost"
               className="system-name"
-              title={`Show only ${s.name.toLowerCase()}`}
+              title={t.layers.showOnly(t.systems[s.id].name)}
               onClick={() => show([s.id])}
             >
               <span className="system-dot" style={{ background: s.color }} />
-              {s.name}
+              {t.systems[s.id].name}
               <span className="system-count">{counts[s.id]}</span>
             </Button>
             <Switch
               checked={state.visible.includes(s.id)}
               onCheckedChange={() => onToggle(s.id)}
-              aria-label={`Show ${s.name.toLowerCase()}`}
+              aria-label={t.layers.show(t.systems[s.id].name)}
             />
           </div>
         ))}
       </div>
       <div className="panel-foot">
-        <span>{visibleCount.toLocaleString()} pieces visible</span>
+        <span>{t.layers.visible(n(visibleCount))}</span>
         <Button variant="ghost" onClick={() => show([])}>
-          Hide all
+          {t.layers.hideAll}
         </Button>
       </div>
     </section>

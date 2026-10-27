@@ -2,15 +2,8 @@ import { useRef } from 'react';
 import { ArrowUpRight, ChevronRight, Focus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTitle, SheetDescription } from '@/components/ui/sheet';
-import {
-  EXPLANATIONS,
-  SYSTEMS,
-  explanation,
-  type Concept,
-  type Part,
-  type SceneState,
-  type SetSceneState,
-} from '../anatomy';
+import { SYSTEMS, type Concept, type Part, type SceneState, type SetSceneState } from '../anatomy';
+import { useI18n } from '../i18n';
 
 const MAX_MEMBERS = 50;
 
@@ -33,43 +26,44 @@ export function DetailSheet({
   selectedParts,
   onChoosePart,
 }: Props) {
+  const { t, n } = useI18n();
   const detailTitle = useRef<HTMLHeadingElement>(null);
   const selected = selectedParts[0],
-    system = SYSTEMS.find((s) => s.id === selected?.system);
+    system = SYSTEMS.find((s) => s.id === selected?.system),
+    organNote = chosen && t.explanations[chosen.name.toLowerCase()];
   return (
     <Sheet open={open} modal={false} disablePointerDismissal onOpenChange={onOpenChange}>
       <SheetContent
         initialFocus={detailTitle}
         className={`detail-sheet glass ${state.isolate ? 'is-isolated' : ''}`}
         showCloseButton={true}
+        closeLabel={t.detail.close}
       >
         <div className="detail-header">
           <div className="detail-accent" style={{ background: system?.color }} />
-          <div className="eyebrow">{system?.name ?? 'ANATOMY'}</div>
+          <div className="eyebrow">{system ? t.systems[system.id].name : t.detail.eyebrow}</div>
           <SheetTitle ref={detailTitle} tabIndex={-1} className="structure-title">
             {chosen?.name}
           </SheetTitle>
         </div>
         <div className="detail-scroll" key={`${chosen?.id}-${state.isolate}`}>
           <SheetDescription className="structure-description">
-            {chosen && selected ? explanation(chosen.name, selected.system) : ''}
+            {chosen && selected ? (organNote ?? t.systems[selected.system].description) : ''}
           </SheetDescription>
-          {chosen && !EXPLANATIONS[chosen.name.toLowerCase()] && (
-            <span className="context-note">
-              System overview · structure identified from source anatomy
-            </span>
-          )}
+          {chosen && !organNote && <span className="context-note">{t.detail.contextNote}</span>}
           <div className="structure-meta">
             <span>
-              Atlas reference<strong>{chosen?.id}</strong>
+              {t.detail.reference}
+              <strong>{chosen?.id}</strong>
             </span>
             <span>
-              Selected pieces<strong>{state.selected.length.toLocaleString()}</strong>
+              {t.detail.selectedPieces}
+              <strong>{n(state.selected.length)}</strong>
             </span>
           </div>
           {selectedParts.length > 1 && (
             <div className="member-list">
-              <h3>Included structures</h3>
+              <h3>{t.detail.included}</h3>
               {selectedParts.slice(0, MAX_MEMBERS).map((p) => (
                 <Button variant="ghost" key={p.id} onClick={() => onChoosePart(p.id)}>
                   <span>{p.name}</span>
@@ -77,7 +71,7 @@ export function DetailSheet({
                 </Button>
               ))}
               {selectedParts.length > MAX_MEMBERS && (
-                <p>And {selectedParts.length - MAX_MEMBERS} more modeled pieces.</p>
+                <p>{t.detail.more(selectedParts.length - MAX_MEMBERS)}</p>
               )}
             </div>
           )}
@@ -87,7 +81,7 @@ export function DetailSheet({
             target="_blank"
             rel="noreferrer"
           >
-            View anatomical source <ArrowUpRight size={14} />
+            {t.detail.source} <ArrowUpRight size={14} />
           </a>
         </div>
         <div className="detail-actions">
@@ -96,7 +90,7 @@ export function DetailSheet({
             onClick={() => setState((s) => ({ ...s, isolate: !s.isolate, explode: 0 }))}
           >
             <Focus size={18} />
-            {state.isolate ? 'Show surrounding anatomy' : 'Isolate structure'}
+            {state.isolate ? t.detail.showSurrounding : t.detail.isolate}
             <ChevronRight size={16} />
           </Button>
           <Button
@@ -107,7 +101,7 @@ export function DetailSheet({
               onOpenChange(false);
             }}
           >
-            Clear selection
+            {t.detail.clear}
           </Button>
         </div>
       </SheetContent>

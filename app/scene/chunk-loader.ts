@@ -1,6 +1,7 @@
 import * as T from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type { Atlas } from '../anatomy';
+import { ViewerError } from '../errors';
 import { decodeModelResponse } from '../model-download';
 
 export async function fetchChunk(atlas: Atlas, ci: number, signal: AbortSignal) {
@@ -46,7 +47,7 @@ export function buildChunkGeometry(
   const merged = new Map<string, T.BufferGeometry>();
   groups.forEach((gs, system) => {
     const geometry = mergeGeometries(gs, false);
-    if (!geometry) throw new Error('Could not assemble anatomy geometry.');
+    if (!geometry) throw new ViewerError('assemble', 'Could not assemble anatomy geometry.');
     merged.set(system, geometry);
   });
   return { parts, merged };
