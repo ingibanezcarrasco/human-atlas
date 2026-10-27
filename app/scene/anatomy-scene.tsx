@@ -17,7 +17,7 @@ interface Props {
   onError: (code: ErrorCode) => void;
   /** Accessible description of the canvas, in the active language. */
   label: string;
-  /** Display name for a structure's source name, used by the hover tooltip. */
+  /** Display name for a structure's source name, used by the hover tooltip (empty hides it). */
   nameOf: (name: string) => string;
 }
 export default function AnatomyScene({
@@ -229,11 +229,12 @@ export default function AnatomyScene({
       const rect = el.getBoundingClientRect(),
         x = e.clientX - rect.left,
         y = e.clientY - rect.top,
-        index = findTarget(targets, x, y, 12);
-      hover.hidden = index < 0;
+        index = findTarget(targets, x, y, 12),
+        text = index < 0 ? '' : displayName.current(atlas.parts[index].name);
+      hover.hidden = !text;
       renderer.domElement.style.cursor = index < 0 ? 'grab' : 'pointer';
-      if (index >= 0) {
-        hover.textContent = displayName.current(atlas.parts[index].name);
+      if (text) {
+        hover.textContent = text;
         hover.style.left = `${Math.max(8, Math.min(x + 14, el.clientWidth - 260))}px`;
         hover.style.top = `${Math.max(8, Math.min(y + 18, el.clientHeight - 55))}px`;
       }
@@ -401,7 +402,9 @@ export default function AnatomyScene({
                 top = 100;
                 bottom = h - 125;
               } else if (mobile) {
-                const sheet = document.querySelector('.detail-sheet')?.getBoundingClientRect(),
+                const sheet = document
+                    .querySelector('.detail-sheet, .quiz-panel')
+                    ?.getBoundingClientRect(),
                   header = document.querySelector('.identity')?.getBoundingClientRect();
                 top = (header?.bottom ?? 94) + 16;
                 bottom = (sheet?.top ?? h * 0.58 - 139) - 16;

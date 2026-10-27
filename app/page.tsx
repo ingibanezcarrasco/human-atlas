@@ -1,7 +1,7 @@
 import { flushSync } from 'react-dom';
 import { registerAtlasTools } from './agent-tools';
-import { useEffect, useMemo, useState } from 'react';
-import { ArrowUpRight, Info, Search } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { ArrowUpRight, Check, GraduationCap, Info, Link2, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import AnatomyScene from './scene/anatomy-scene';
@@ -10,16 +10,20 @@ import { BottomDock, SceneCaption } from './panels/bottom-dock';
 import { DetailSheet } from './panels/detail-sheet';
 import { LayersPanel } from './panels/layers-panel';
 import { LoadStatus } from './panels/load-status';
+import { QuizPanel } from './panels/quiz-panel';
 import { SearchPanel } from './panels/search-panel';
 import { ViewControls } from './panels/view-controls';
 import { ViewerError, errorCode, type ErrorCode } from './errors';
 import { useI18n } from './i18n';
+import { readLink, writeLink, type ViewLink } from './study/share-link';
+import { useQuiz } from './study/use-quiz';
 import {
   MODELS,
   SYSTEMS,
   type Atlas,
   type Concept,
   type SceneState,
+  type SetSceneState,
   type Sex,
   type SystemId,
 } from './anatomy';
@@ -34,7 +38,9 @@ const initial: SceneState = {
 };
 export default function Home() {
   const { lang, setLang, t, n, name } = useI18n();
-  const [sex, setSex] = useState<Sex>('male'),
+  // The view described by the page URL, applied once its model has loaded.
+  const link = useRef<ViewLink | null>(readLink(location.search));
+  const [sex, setSex] = useState<Sex>(link.current?.sex ?? 'male'),
     [atlas, setAtlas] = useState<Atlas | null>(null),
     [state, setState] = useState(initial),
     [progress, setProgress] = useState(0),
@@ -43,7 +49,8 @@ export default function Home() {
     [details, setDetails] = useState(false),
     [about, setAbout] = useState(false),
     [query, setQuery] = useState(''),
-    [chosen, setChosen] = useState<Concept | null>(null);
+    [chosen, setChosen] = useState<Concept | null>(null),
+    [shared, setShared] = useState<'copied' | 'failed' | null>(null);
   useEffect(() => {
     const abort = new AbortController();
     setProgress(0);
@@ -73,12 +80,19 @@ export default function Home() {
         e.preventDefault();
         setPanel('search');
         setDetails(false);
+        study.stop();
       }
     };
     window.addEventListener('keydown', key);
     return () => window.removeEventListener('keydown', key);
   }, []);
   const parts = useMemo(() => new Map(atlas?.parts.map((p) => [p.id, p])), [atlas]);
+  const study = useQuiz(atlas, parts, state.visible, setState),
+    quizzing = !!study.quiz;
+  // During practice the selection belongs to the quiz, so layer changes keep it.
+  const setLayers: SetSceneState = quizzing
+    ? (update) => setState((s) => ({ ...update(s), selected: s.selected, isolate: s.isolate }))
+    : setState;
   const counts = useMemo(
     () =>
       Object.fromEntries(
@@ -106,7 +120,7 @@ export default function Home() {
   }, [atlas]);
   const choosePart = (id: string) => {
     const p = parts.get(id);
-    if (!p) return;
+    if (!p || study.tapPart(id)) return;
     setChosen({ id: p.conceptId, name: p.name, elements: [id] });
     setState((s) => ({ ...s, selected: [id], isolate: false, rotate: false }));
     setDetails(true);
@@ -114,7 +128,7 @@ export default function Home() {
   };
   const toggle = (id: SystemId) => {
     setDetails(false);
-    setState((s) => ({
+    setLayers((s) => ({
       ...s,
       selected: [],
       isolate: false,
@@ -122,6 +136,7 @@ export default function Home() {
     }));
   };
   const reset = () => {
+    study.stop();
     setState((s) => ({ ...initial, visible: MODELS[sex].defaultVisible, reset: s.reset + 1 }));
     setChosen(null);
     setDetails(false);
@@ -129,7 +144,69 @@ export default function Home() {
   };
   const openPanel = (next: 'layers' | 'search') => {
     setDetails(false);
+    if (next === 'search') study.stop();
     setPanel((p) => (p === next ? null : next));
+  };
+  const startQuiz = () => {
+    if (quizzing) return study.stop();
+    setDetails(false);
+    setPanel(null);
+    setChosen(null);
+    study.start();
+  };
+  // Apply the linked view once its model is loaded.
+  useEffect(() => {
+    const l = link.current;
+    if (!atlas || !l) return;
+    link.current = null;
+    const concept = l.concept ? atlas.concepts.find((c) => c.id === l.concept) : undefined,
+      part = l.part ? parts.get(l.part) : undefined,
+      picked = part
+        ? { id: part.conceptId, name: part.name, elements: [part.id] }
+        : (concept ?? null);
+    setState((s) => ({
+      ...s,
+      view: l.view ?? s.view,
+      explode: l.explode ?? s.explode,
+      visible: l.visible ?? s.visible,
+      selected: picked?.elements ?? [],
+      isolate: !!picked && !!l.isolate,
+      reset: s.reset + 1,
+    }));
+    setChosen(picked);
+    setDetails(!!picked);
+  }, [atlas]);
+  const linkQuery = () =>
+    writeLink(
+      sex,
+      state,
+      // Never put a quiz answer in the address bar.
+      quizzing || !chosen || !state.selected.length
+        ? {}
+        : chosen.elements.length === 1 && chosen.id === parts.get(chosen.elements[0])?.conceptId
+          ? { part: chosen.elements[0] }
+          : { concept: chosen.id },
+    );
+  // Keep the address bar in step with the view (debounced: browsers rate-limit replaceState).
+  useEffect(() => {
+    if (!atlas || link.current) return;
+    const timer = setTimeout(() => {
+      const query = linkQuery();
+      history.replaceState(null, '', query ? `?${query}` : location.pathname);
+    }, 300);
+    return () => clearTimeout(timer);
+  });
+  const copyLink = async () => {
+    const query = linkQuery();
+    try {
+      await navigator.clipboard.writeText(
+        `${location.origin}${location.pathname}${query ? `?${query}` : ''}`,
+      );
+      setShared('copied');
+    } catch {
+      setShared('failed');
+    }
+    setTimeout(() => setShared(null), 2500);
   };
   const openAbout = () => {
     setDetails(false);
@@ -137,11 +214,15 @@ export default function Home() {
     setAbout(true);
   };
   return (
-    <main className="studio">
+    <main className={`studio ${quizzing ? 'is-quizzing' : ''}`}>
       {atlas && (
         <AnatomyScene
           atlas={atlas}
-          state={{ ...state, inspectorOpen: details && selectedParts.length > 0 }}
+          // The practice panel takes the inspector's place when framing an isolated structure.
+          state={{
+            ...state,
+            inspectorOpen: quizzing || (details && selectedParts.length > 0),
+          }}
           onSelect={choosePart}
           onProgress={(percent) => {
             setProgress(percent);
@@ -149,7 +230,8 @@ export default function Home() {
           }}
           onError={setError}
           label={t.canvas}
-          nameOf={name}
+          // Hover names would give away the answers during practice.
+          nameOf={quizzing ? () => '' : name}
         />
       )}
       <div className="vignette" />
@@ -180,6 +262,7 @@ export default function Home() {
                 setAtlas(null);
                 setProgress(0);
                 setPanel(null);
+                study.stop();
                 setSex(option);
               }}
             >
@@ -201,6 +284,25 @@ export default function Home() {
         </Button>
         <Button
           variant="ghost"
+          className={`icon-button ${quizzing ? 'active' : ''}`}
+          aria-label={t.quiz.open}
+          aria-pressed={quizzing}
+          title={t.quiz.open}
+          onClick={startQuiz}
+        >
+          <GraduationCap size={18} />
+        </Button>
+        <Button
+          variant="ghost"
+          className="icon-button share-button"
+          aria-label={shared ? t.share[shared] : t.share.button}
+          title={shared ? t.share[shared] : t.share.button}
+          onClick={copyLink}
+        >
+          {shared === 'copied' ? <Check size={18} /> : <Link2 size={18} />}
+        </Button>
+        <Button
+          variant="ghost"
           className="icon-button lang-toggle"
           aria-label={t.switchTo}
           title={t.switchTo}
@@ -216,10 +318,13 @@ export default function Home() {
         >
           <Info size={18} />
         </Button>
+        <span className="sr-only" role="status">
+          {shared && t.share[shared]}
+        </span>
       </nav>
       <LayersPanel
         state={state}
-        setState={setState}
+        setState={setLayers}
         systems={activeSystems}
         counts={counts}
         visibleCount={visibleCount}
@@ -236,8 +341,26 @@ export default function Home() {
           onClose={() => setPanel(null)}
         />
       )}
+      {study.quiz && (
+        <QuizPanel
+          quiz={study.quiz}
+          poolSize={study.poolSize}
+          parts={parts}
+          state={state}
+          onToggleIsolated={study.toggleIsolated}
+          onRestart={study.restart}
+          onChoose={study.chooseAnswer}
+          onReveal={study.reveal}
+          onNext={study.next}
+          onClose={study.stop}
+        />
+      )}
       <ViewControls state={state} setState={setState} onReset={reset} />
-      <SceneCaption state={state} sex={sex} chosenName={chosen ? name(chosen.name) : undefined} />
+      <SceneCaption
+        state={state}
+        sex={sex}
+        chosenName={chosen && !quizzing ? name(chosen.name) : undefined}
+      />
       <BottomDock
         state={state}
         setState={setState}
@@ -259,7 +382,7 @@ export default function Home() {
         partCount={atlas?.parts.length ?? MODELS[sex].pieces}
       />
       <DetailSheet
-        open={details && selectedParts.length > 0}
+        open={details && !quizzing && selectedParts.length > 0}
         onOpenChange={setDetails}
         state={state}
         setState={setState}

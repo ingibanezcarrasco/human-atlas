@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { SYSTEMS, type Sex, type SystemId, type View } from './anatomy';
 import type { ErrorCode } from './errors';
+import type { QuizLevel, QuizMode } from './study/quiz';
 
 export type Lang = 'en' | 'es';
 export const LANGS: Lang[] = ['en', 'es'];
@@ -49,6 +50,37 @@ const en = {
     limited: (n: number) =>
       `Showing up to ${n} matches. Refine your search to find smaller structures.`,
     hint: 'Start with a major organ, or search every named structure.',
+  },
+  quiz: {
+    open: 'Practice',
+    region: 'Practice',
+    heading: 'Practice',
+    close: 'End practice',
+    modeLabel: 'Question type',
+    modes: { name: 'Name it', locate: 'Find it' } as Record<QuizMode, string>,
+    levelLabel: 'Structures',
+    levels: { basic: 'Main', all: 'All' } as Record<QuizLevel, string>,
+    scoreLabel: 'Score',
+    score: (right: string, total: string) => `${right} / ${total}`,
+    streak: (n: string) => `${n} in a row`,
+    nameQuestion: 'Which structure is highlighted?',
+    locateQuestion: 'Tap on the body:',
+    locateHint: 'Hide layers or explode the anatomy to reach deeper structures.',
+    correct: 'Correct!',
+    wrong: (answer: string) => `The answer is ${answer}.`,
+    tapped: (name: string) => `You tapped ${name}.`,
+    isolate: 'Isolate',
+    context: 'Show in context',
+    reveal: 'Show answer',
+    next: 'Next',
+    skip: 'Skip',
+    empty: 'Turn on more systems to get questions.',
+    scope: (n: string) => `Questions from ${n} structures in the visible systems.`,
+  },
+  share: {
+    button: 'Copy a link to this view',
+    copied: 'Link copied',
+    failed: 'The link could not be copied',
   },
   views: {
     region: 'Camera controls',
@@ -217,6 +249,37 @@ const es: Messages = {
     limited: (n) =>
       `Se muestran hasta ${n} resultados. Precisa la búsqueda para encontrar estructuras más pequeñas.`,
     hint: 'Empieza por un órgano principal o busca cualquier estructura con nombre.',
+  },
+  quiz: {
+    open: 'Practicar',
+    region: 'Práctica',
+    heading: 'Práctica',
+    close: 'Terminar la práctica',
+    modeLabel: 'Tipo de pregunta',
+    modes: { name: 'Nombrar', locate: 'Localizar' },
+    levelLabel: 'Estructuras',
+    levels: { basic: 'Principales', all: 'Todas' },
+    scoreLabel: 'Puntuación',
+    score: (right, total) => `${right} / ${total}`,
+    streak: (n) => `${n} seguidas`,
+    nameQuestion: '¿Qué estructura está resaltada?',
+    locateQuestion: 'Toca en el cuerpo:',
+    locateHint: 'Oculta capas o separa la anatomía para llegar a las estructuras internas.',
+    correct: '¡Correcto!',
+    wrong: (answer) => `La respuesta es: ${answer}.`,
+    tapped: (name) => `Has tocado: ${name}.`,
+    isolate: 'Aislar',
+    context: 'Ver en contexto',
+    reveal: 'Ver respuesta',
+    next: 'Siguiente',
+    skip: 'Saltar',
+    empty: 'Activa más sistemas para recibir preguntas.',
+    scope: (n) => `Preguntas sobre ${n} estructuras de los sistemas visibles.`,
+  },
+  share: {
+    button: 'Copiar un enlace a esta vista',
+    copied: 'Enlace copiado',
+    failed: 'No se pudo copiar el enlace',
   },
   views: {
     region: 'Controles de cámara',

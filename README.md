@@ -13,6 +13,8 @@ An interactive 3D anatomy explorer built with React, Three.js, and shadcn/ui. Ta
 - Search anatomical names and source identifiers.
 - Isolate a selected structure and read its details.
 - Use compact controls and detail panels on mobile.
+- Practice: name a highlighted structure from four choices, or find a named one on the body, at the main-structures level or across every structure in the visible systems.
+- Share the current view: the address bar keeps the model, selection, camera preset, layers, and explode amount, and the link button copies it.
 - Switch between English and Spanish (follows the browser language by default), including all 4,129 anatomical names of both models; Spanish search also matches English names.
 
 ## Run locally

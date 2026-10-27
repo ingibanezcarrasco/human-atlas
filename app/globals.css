@@ -1865,3 +1865,174 @@ h1 .edition {
     min-height: 36px;
   }
 }
+/* Practice mode: shares the search panel's position. */
+.quiz-panel .panel-heading {
+  gap: 10px;
+}
+.quiz-panel .panel-heading > span:first-child {
+  margin-right: auto;
+}
+.quiz-score {
+  font-size: 12px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: #5a6876;
+}
+.quiz-score b {
+  margin-left: 8px;
+  font-weight: 500;
+  color: #2f7d6d;
+}
+.quiz-settings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+.quiz-settings .anatomy-choice {
+  margin-top: 0;
+}
+.quiz-settings .anatomy-choice button {
+  padding: 0 10px;
+}
+.quiz-question {
+  margin: 14px 0 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: #26313c;
+}
+.quiz-question strong {
+  font-weight: 600;
+}
+.quiz-choices {
+  display: grid;
+  gap: 6px;
+  margin-top: 10px;
+}
+.quiz-choices button {
+  justify-content: space-between;
+  height: auto;
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid #18253618;
+  border-radius: 9px;
+  background: #ffffff;
+  font-size: 13px;
+  text-align: left;
+  white-space: normal;
+  color: #26313c;
+}
+.quiz-choices button:disabled {
+  opacity: 1;
+}
+.quiz-choices button.is-right {
+  border-color: #2f7d6d;
+  background: #e6f4f0;
+}
+.quiz-choices button.is-wrong {
+  border-color: #b4574b;
+  background: #fbecea;
+}
+.quiz-feedback {
+  min-height: 20px;
+  margin-top: 10px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #5a6876;
+}
+.quiz-feedback .is-right {
+  color: #2f7d6d;
+  font-weight: 600;
+}
+.quiz-feedback .is-wrong {
+  color: #9b4338;
+  font-weight: 600;
+}
+.quiz-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.quiz-actions button {
+  flex: 1;
+  min-height: 40px;
+  gap: 7px;
+  border-radius: 9px;
+  font-size: 12px;
+}
+.quiz-actions button:first-child {
+  border: 1px solid #18253618;
+}
+.quiz-actions button.active {
+  background: #263b4812;
+}
+.quiz-panel .search-note {
+  margin-top: 10px;
+}
+.top-actions .icon-button.active {
+  background: #263b48;
+  color: #ffffff;
+}
+@media (max-width: 767px) {
+  /* Keep the body in view: practice sits at the bottom, in place of the dock. */
+  .is-quizzing .bottom-dock,
+  .is-quizzing .studio-footer {
+    display: none;
+  }
+  .quiz-panel {
+    top: auto;
+    bottom: 12px;
+    padding: 10px 14px 12px;
+  }
+  .quiz-settings .anatomy-choice button {
+    min-height: 32px;
+  }
+  .quiz-question {
+    margin-top: 10px;
+  }
+  .quiz-choices {
+    grid-template-columns: 1fr 1fr;
+  }
+  .quiz-choices button {
+    min-height: 44px;
+    font-size: 12px;
+    line-height: 1.3;
+  }
+  .quiz-feedback {
+    min-height: 0;
+    margin-top: 8px;
+  }
+  .quiz-panel .search-note {
+    display: none;
+  }
+}
+@media (max-width: 767px) {
+  /* Five header actions do not fit beside the title: wrap them into two short rows. */
+  .top-actions {
+    max-width: 148px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  /* Below the model switch, which would otherwise cover the first view buttons. */
+  .view-controls {
+    top: max(162px, calc(env(safe-area-inset-top) + 144px));
+  }
+}
+@media (max-height: 600px) and (orientation: landscape) {
+  .quiz-panel {
+    max-height: calc(100dvh - 82px);
+    overflow-y: auto;
+  }
+  .quiz-choices {
+    grid-template-columns: 1fr 1fr;
+  }
+  .quiz-panel .search-note {
+    display: none;
+  }
+}
+@media (max-height: 600px) and (orientation: landscape) {
+  .is-quizzing .bottom-dock,
+  .is-quizzing .studio-footer {
+    display: none;
+  }
+}
