@@ -2,9 +2,8 @@
   "name": "anatomy-studio",
   "version": "0.1.0",
   "private": true,
-  "engines": {
-    "node": ">=22.13.0"
-  },
+  "license": "MIT",
+  "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0 --port 3016",
     "build": "vite build",
@@ -39,6 +38,7 @@
     "typescript": "5.9.3",
     "vite": "8.0.13"
   },
-  "type": "module",
-  "license": "MIT"
+  "engines": {
+    "node": ">=22.13.0"
+  }
 }
