@@ -13,7 +13,7 @@ An interactive 3D anatomy explorer built with React, Three.js, and shadcn/ui. Ta
 - Search anatomical names and source identifiers.
 - Isolate a selected structure and read its details.
 - Use compact controls and detail panels on mobile.
-- Switch between English and Spanish (follows the browser language by default), including the 3,432 anatomical names; Spanish search also matches English names.
+- Switch between English and Spanish (follows the browser language by default), including all 4,129 anatomical names of both models; Spanish search also matches English names.
 
 ## Run locally
 
@@ -71,3 +71,5 @@ Import this repository into Vercel as a Vite project. The included `vercel.json`
 Original application code is released under the [MIT License](LICENSE). **The anatomy data has its own CC BY 4.0 license**; preserve the attribution when redistributing it. Third-party dependencies retain their respective licenses.
 
 Issues and pull requests are welcome. Please include reproduction steps and browser/device details for interaction problems.
+
+Improvement log and roadmap (in Spanish): [docs/MEJORAS.md](docs/MEJORAS.md).
