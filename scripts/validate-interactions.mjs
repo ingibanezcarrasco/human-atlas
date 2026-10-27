@@ -4,7 +4,7 @@ import { createExplosionLayout } from '../app/explosion-layout.ts';
 import { PointerTap } from '../app/pointer-tap.ts';
 import { atlasTools } from '../app/agent-tools.ts';
 
-for (const file of ['atlas.json']) {
+for (const file of ['atlas.json', 'atlas-female.json']) {
   const atlas = JSON.parse(await readFile(new URL(`../public/models/${file}`, import.meta.url)));
   const groups = [
     atlas.parts,

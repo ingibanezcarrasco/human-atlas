@@ -17,17 +17,17 @@ BodyParts3D represents an adult male reference anatomy based on TARO MRI and ana
 
 ## Spanish anatomical names
 
-`models/names-es.json` gives a Spanish name for every concept and mesh name. About 700 come from Wikidata labels matched by FMA ID (CC0, https://www.wikidata.org/wiki/Property:P1402), with corrections; left/right variants are composed from them; the remaining names were translated for this project following Spanish anatomical terminology. Sources and the build script are in `scripts/i18n/` and `scripts/build-names-es.mjs`. Translations are educational, not a clinical reference.
+`models/names-es.json` gives a Spanish name for every concept and mesh name in both models. For the male model, about 700 come from Wikidata labels matched by FMA ID (CC0, https://www.wikidata.org/wiki/Property:P1402), with corrections; left/right variants are composed from them; the remaining names, and those of the female model, were translated for this project following Spanish anatomical terminology. Sources and the build script are in `scripts/i18n/` and `scripts/build-names-es.mjs`. Translations are educational, not a clinical reference.
 
-## Historical assets (not included in the current release)
+## Female reference anatomy
 
-Earlier repository revisions included female reference anatomy: Kristen Browne and Heidi Schlehlein, Human Reference Atlas / HuBMAP, _3D Reference Organ Set for Female v1.5_ (2023). CC BY 4.0. Geometry adapted for this viewer.
+Kristen Browne and Heidi Schlehlein, Human Reference Atlas / HuBMAP, _3D Reference Organ Set for Female v1.5_ (2023). CC BY 4.0. Geometry adapted for this viewer.
 
 - Source DOI: https://doi.org/10.48539/HBM352.BTSQ.586
 - Dataset: https://lod.humanatlas.io/ref-organ/united-female/v1.5
 - Original GLB: https://cdn.humanatlas.io/digital-objects/ref-organ/united-female/v1.5/assets/3d-vh-f-united.glb
 - License: https://creativecommons.org/licenses/by/4.0/
 
-Adaptations: translated native meter/Y-up coordinates onto the stage, coincident vertices welded and source normals averaged, geometry simplified with a 0.2% per-structure relative error bound, and normals quantized. Colors and display systems are curated for this interface. All 888 source meshes are represented, with 1,073 source nodes available as selectable individual or compound concepts.
+Adaptations: translated native meter/Y-up coordinates onto the stage, coincident vertices welded and source normals averaged, geometry simplified with a 0.2% per-structure relative error bound, positions and normals quantized and encoded as for the male model, and vertices whose welded normals cancelled out given face-based normals. Colors and display systems are curated for this interface. All 888 source meshes are represented, with 1,073 source nodes available as selectable individual or compound concepts.
 
 This is a reference assembly with whole-body surface and selected organs, including female reproductive anatomy. Its skeleton and muscle coverage is partial. It is not a complete model of every human structure or a single-person scan. Eight placenta/umbilical structures are classified under Pregnancy reference and hidden by default.

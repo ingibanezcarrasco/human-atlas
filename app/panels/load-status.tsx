@@ -10,7 +10,7 @@ export function LoadStatus({
 }: {
   progress: number;
   error: ErrorCode | null;
-  partCount?: number;
+  partCount: number;
 }) {
   const { t, n } = useI18n();
   if (error)
@@ -28,7 +28,7 @@ export function LoadStatus({
       <Activity size={18} />
       <div>
         <strong>{t.loading.title}</strong>
-        <span>{t.loading.progress(progress, n(partCount ?? 2234))}</span>
+        <span>{t.loading.progress(progress, n(partCount))}</span>
         <div className="loading-track">
           <i style={{ width: `${progress}%` }} />
         </div>

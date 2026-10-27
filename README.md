@@ -1,11 +1,12 @@
 # Human Atlas
 
-An interactive 3D anatomy explorer built with React, Three.js, and shadcn/ui. Take the BodyParts3D adult male reference apart into **2,234 individually selectable meshes**, explore **15 anatomical systems**, and search **3,432 named concepts**.
+An interactive 3D anatomy explorer built with React, Three.js, and shadcn/ui. Take two reference anatomies apart: the BodyParts3D adult male (**2,234 individually selectable meshes**, **3,432 named concepts**) and the Human Reference Atlas female (**888 meshes**, **1,073 concepts**), across up to 16 anatomical systems.
 
 **[Explore the live demo](https://human-atlas-seven.vercel.app)**
 
 ## Explore
 
+- Switch between the male and female reference anatomy.
 - Orbit, zoom, and select structures directly on the body.
 - Toggle individual systems or use skeleton and organ presets.
 - Move from assembled anatomy to a spaced inventory of every visible piece.
@@ -41,9 +42,9 @@ Validation covers mesh buffers, names and concept membership, nonoverlapping exp
 
 ## Anatomy data
 
-The current viewer uses **BodyParts3D 4.0**, an adult male reference anatomy, licensed **CC BY 4.0**. It does not represent every human structure or variation. Individual source meshes are distinct from named concepts, which may group multiple meshes. Descriptions distinguish general system context from individual organ explanations.
+The viewer includes two independent collections, both licensed **CC BY 4.0**: **BodyParts3D 4.0**, an adult male reference anatomy, and the **Human Reference Atlas united-female v1.5**, with the whole-body surface, selected organs and female reproductive anatomy but only partial skeleton and muscle coverage (its eight pregnancy reference pieces are a separate layer, hidden by default). Neither represents every human structure or variation. Individual source meshes are distinct from named concepts, which may group multiple meshes. Descriptions distinguish general system context from individual organ explanations.
 
-Geometry is simplified for browser performance while retaining every source mesh. The packaged model contains 2,288,268 triangles and downloads about 15 MB of compressed geometry, in chunks ordered so the skeleton and organs appear before the muscles and vessels. Full credits, source links, and adaptation details are in [ATTRIBUTION.md](public/ATTRIBUTION.md).
+Geometry is simplified for browser performance while retaining every source mesh. The male model contains 2,288,268 triangles and downloads about 15 MB of compressed geometry; the female model 1,810,038 triangles and about 8 MB. Both load in chunks ordered so the skeleton and organs appear before the muscles and vessels. Full credits, source links, and adaptation details are in [ATTRIBUTION.md](public/ATTRIBUTION.md).
 
 This is an educational explorer, not a diagnostic or surgical tool.
 
@@ -55,7 +56,7 @@ The optional WebMCP tools expose anatomy search and inspection in compatible bro
 
 ## Rebuilding geometry
 
-The repository includes browser-ready geometry. Rebuilding it is optional: obtain the official BodyParts3D OBJ archive and English metadata tables, prepare the joined concepts and display-system mappings, run `scripts/convert-anatomy.py`, then `node scripts/optimize-anatomy.mjs` and `node scripts/encode-models.mjs`. Simplification uses a 0.2% relative error limit per structure. Encoding quantizes positions to 16 bits within each structure's bounds (error under 0.1 mm) and normals to 8 bits, reorders vertices for the GPU cache, and applies meshoptimizer's codecs plus gzip.
+The repository includes browser-ready geometry. Rebuilding it is optional: obtain the official BodyParts3D OBJ archive and English metadata tables, prepare the joined concepts and display-system mappings, run `scripts/convert-anatomy.py`, then `node scripts/optimize-anatomy.mjs` and `node scripts/encode-models.mjs`. For the female model, convert the HRA GLB with `scripts/convert-female.py` and pass `atlas-female.json` to both Node scripts. Simplification uses a 0.2% relative error limit per structure. Encoding quantizes positions to 16 bits within each structure's bounds (error under 0.1 mm) and normals to 8 bits, reorders vertices for the GPU cache, and applies meshoptimizer's codecs plus gzip.
 
 ## Spanish names
 

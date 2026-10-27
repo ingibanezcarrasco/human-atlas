@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { SYSTEMS, type SystemId, type View } from './anatomy';
+import { SYSTEMS, type Sex, type SystemId, type View } from './anatomy';
 import type { ErrorCode } from './errors';
 
 export type Lang = 'en' | 'es';
@@ -16,6 +16,8 @@ const en = {
     search: 'Search anatomy',
     find: 'Find a structure',
     about: 'About this atlas',
+    model: 'Reference anatomy',
+    models: { male: 'Male', female: 'Female' } as Record<Sex, string>,
   },
   footer: {
     pan: 'Drag to pan',
@@ -76,7 +78,10 @@ const en = {
     selected: 'SELECTED STRUCTURE',
     inventory: 'ANATOMICAL INVENTORY',
     separated: 'SEPARATED STRUCTURES',
-    assembled: 'ADULT HUMAN · MALE',
+    assembled: { male: 'ADULT HUMAN · MALE', female: 'ADULT HUMAN · FEMALE' } as Record<
+      Sex,
+      string
+    >,
   },
   detail: {
     eyebrow: 'ANATOMY',
@@ -94,17 +99,23 @@ const en = {
   about: {
     eyebrow: 'SOURCE & SCOPE',
     title: 'A body, revealed.',
-    description: 'Explore the adult male reference anatomy from BodyParts3D.',
+    description: 'Explore two independent, licensed reference collections.',
     datasetTitle: 'Male · BodyParts3D',
     dataset:
       '2,234 individual meshes and 3,432 named concepts from an adult male reference anatomy.',
+    femaleTitle: 'Female · Human Reference Atlas',
+    female:
+      '888 source meshes, including the whole-body surface, selected organs, and female reproductive anatomy. Skeleton and muscle coverage is partial. Eight pregnancy reference pieces are in a separate layer, hidden by default.',
     scope:
-      'This reference does not contain every human structure or variation. Named concepts can contain multiple pieces; each source mesh is rendered once.',
+      'These collections have different coverage. Neither contains every human structure or variation. Named concepts can contain multiple pieces; each source mesh is rendered once.',
     disclaimer:
       'Colors and system groupings are designed for exploration. The geometry is simplified for the web, and short explanations provide general educational context. This is an anatomical reference, not a diagnostic or surgical tool.',
     sourceHeading: 'Source',
     source:
       'BodyParts3D, © The Database Center for Life Science licensed under CC Attribution 4.0 International.',
+    femaleSource:
+      'Kristen Browne and Heidi Schlehlein, Human Reference Atlas / HuBMAP, 3D Reference Organ Set for Female v1.5 (2023), licensed under CC Attribution 4.0 International.',
+    femaleDataset: 'Female reference dataset',
     license: 'Dataset license',
     original: 'Original geometry & metadata',
     publication: 'Read the source publication',
@@ -128,6 +139,9 @@ const en = {
   systems: Object.fromEntries(
     SYSTEMS.map((s) => [s.id, { name: s.name, description: s.description }]),
   ) as Record<SystemId, { name: string; description: string }>,
+  /** Replaces the (male) reproductive system description in the female atlas. */
+  femaleReproductive:
+    'Female reproductive structures include the ovaries, uterine tubes, uterus, cervix, and vagina. Together they support oocyte development, fertilization, menstruation, and pregnancy.',
   /** Short explanations for individual organs, keyed by the atlas (English) concept name. */
   explanations: {
     heart:
@@ -148,6 +162,12 @@ const en = {
       'The main airway connecting the larynx to the bronchi. Its cartilage supports keep the airway open during breathing.',
     diaphragm:
       'A broad muscle separating the chest and abdomen. When it contracts, it increases chest volume and helps draw air into the lungs.',
+    uterus:
+      'A hollow muscular organ in the pelvis. Its lining changes through the menstrual cycle and can support implantation and development during pregnancy.',
+    vagina:
+      'A muscular canal connecting the cervix of the uterus to the outside of the body. It provides a passage for menstrual flow and forms part of the birth canal.',
+    ovary:
+      'An organ that contains developing oocytes and produces hormones including estrogen and progesterone.',
   } as Record<string, string>,
 };
 
@@ -164,6 +184,8 @@ const es: Messages = {
     search: 'Buscar en la anatomía',
     find: 'Buscar una estructura',
     about: 'Acerca de este atlas',
+    model: 'Anatomía de referencia',
+    models: { male: 'Masculina', female: 'Femenina' },
   },
   footer: {
     pan: 'Arrastra para desplazar',
@@ -224,7 +246,7 @@ const es: Messages = {
     selected: 'ESTRUCTURA SELECCIONADA',
     inventory: 'INVENTARIO ANATÓMICO',
     separated: 'ESTRUCTURAS SEPARADAS',
-    assembled: 'VARÓN ADULTO',
+    assembled: { male: 'VARÓN ADULTO', female: 'MUJER ADULTA' },
   },
   detail: {
     eyebrow: 'ANATOMÍA',
@@ -242,17 +264,23 @@ const es: Messages = {
   about: {
     eyebrow: 'FUENTE Y ALCANCE',
     title: 'Un cuerpo, al descubierto.',
-    description: 'Explora la anatomía de referencia de un varón adulto de BodyParts3D.',
-    datasetTitle: 'Masculino · BodyParts3D',
+    description: 'Explora dos colecciones de referencia independientes y con licencia abierta.',
+    datasetTitle: 'Masculina · BodyParts3D',
     dataset:
       '2.234 mallas individuales y 3.432 conceptos con nombre de una anatomía de referencia de un varón adulto.',
+    femaleTitle: 'Femenina · Human Reference Atlas',
+    female:
+      '888 mallas de origen, con la superficie corporal completa, órganos seleccionados y la anatomía reproductora femenina. La cobertura del esqueleto y los músculos es parcial. Ocho piezas de referencia del embarazo están en una capa aparte, oculta por defecto.',
     scope:
-      'Esta referencia no incluye todas las estructuras ni variaciones del cuerpo humano. Un concepto con nombre puede abarcar varias piezas; cada malla de origen se dibuja una sola vez.',
+      'Las dos colecciones tienen coberturas distintas. Ninguna incluye todas las estructuras ni variaciones del cuerpo humano. Un concepto con nombre puede abarcar varias piezas; cada malla de origen se dibuja una sola vez.',
     disclaimer:
       'Los colores y la agrupación por sistemas están pensados para explorar. La geometría está simplificada para la web y las explicaciones breves ofrecen un contexto educativo general. Es una referencia anatómica, no una herramienta de diagnóstico ni quirúrgica.',
     sourceHeading: 'Fuente',
     source:
       'BodyParts3D, © The Database Center for Life Science, con licencia Creative Commons Atribución 4.0 Internacional.',
+    femaleSource:
+      'Kristen Browne y Heidi Schlehlein, Human Reference Atlas / HuBMAP, 3D Reference Organ Set for Female v1.5 (2023), con licencia Creative Commons Atribución 4.0 Internacional.',
+    femaleDataset: 'Conjunto de datos femenino',
     license: 'Licencia del conjunto de datos',
     original: 'Geometría y metadatos originales',
     publication: 'Leer la publicación original',
@@ -350,7 +378,14 @@ const es: Messages = {
       description:
         'El cartílago, los ligamentos y otros tejidos conectivos sostienen, unen y separan estructuras. Entre sus funciones están estabilizar las articulaciones y repartir las cargas mecánicas.',
     },
+    pregnancy: {
+      name: 'Embarazo',
+      description:
+        'La placenta y el cordón umbilical permiten el intercambio entre la circulación materna y la fetal durante el embarazo. Estas estructuras de referencia se muestran aparte de la anatomía adulta por defecto.',
+    },
   },
+  femaleReproductive:
+    'Las estructuras reproductoras femeninas incluyen los ovarios, las trompas uterinas, el útero, el cuello uterino y la vagina. Juntas participan en el desarrollo de los ovocitos, la fecundación, la menstruación y el embarazo.',
   explanations: {
     heart:
       'Una bomba muscular situada en el tórax. Su lado derecho envía la sangre a los pulmones; su lado izquierdo la impulsa por la circulación sistémica.',
@@ -370,6 +405,12 @@ const es: Messages = {
       'La vía aérea principal que une la laringe con los bronquios. Sus anillos de cartílago mantienen abierta la vía durante la respiración.',
     diaphragm:
       'Un músculo ancho que separa el tórax del abdomen. Al contraerse aumenta el volumen del tórax y ayuda a que el aire entre en los pulmones.',
+    uterus:
+      'Un órgano muscular hueco situado en la pelvis. Su revestimiento cambia a lo largo del ciclo menstrual y puede permitir la implantación y el desarrollo durante el embarazo.',
+    vagina:
+      'Un conducto muscular que une el cuello del útero con el exterior del cuerpo. Da paso al flujo menstrual y forma parte del canal del parto.',
+    ovary:
+      'Un órgano que contiene los ovocitos en desarrollo y produce hormonas como los estrógenos y la progesterona.',
   },
 };
 
@@ -432,7 +473,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   // es-ES omits the thousands separator for four-digit numbers; always group for consistency.
   const n = (value: number) => value.toLocaleString(t.locale, { useGrouping: 'always' });
   const name = (english: string) => {
-    const spanish = lang === 'es' ? spanishNames?.[english.toLowerCase()] : undefined;
+    const spanish = lang === 'es' ? spanishNames?.[english.toLowerCase().trim()] : undefined;
     return spanish ? spanish.charAt(0).toLocaleUpperCase('es') + spanish.slice(1) : english;
   };
   return (

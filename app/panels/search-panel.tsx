@@ -22,6 +22,7 @@ const MAJOR_ORGANS = [
   'pancreas',
   'urinary bladder',
   'trachea',
+  'uterus',
 ];
 const MAX_RESULTS = 80;
 

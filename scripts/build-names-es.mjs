@@ -1,24 +1,27 @@
-// Build public/models/names-es.json: a Spanish name for every concept and mesh name in the atlas.
+// Build public/models/names-es.json: a Spanish name for every concept and mesh name in both atlases.
 //
 // Sources, in priority order:
 //   1. scripts/i18n/names-es-overrides.tsv  hand corrections keyed by English name
-//   2. scripts/i18n/wikidata-fma-es.tsv     Wikidata labels matched by FMA ID (CC0)
+//   2. scripts/i18n/wikidata-fma-es.tsv     Wikidata labels matched by FMA ID (CC0; male atlas)
 //   3. "left/right X" composed from a translated X, with the side adjective agreeing in gender
 //   4. scripts/i18n/names-es.tsv            hand translations of templates in which every
 //      "left"/"right" is written {S}; the Spanish side placeholders {S:m} {S:f} {S:mp} {S:fp}
 //      (or {S1:…} {S2:…} when there are several) give the position and agreement. A template
-//      also covers the same name without sides.
+//      also covers the same name without sides ("X {S}" or "X ({S})" with the side removed).
 //
 // Usage: node scripts/build-names-es.mjs [--check]   (--check fails if the JSON is out of date)
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 
 const file = (path) => new URL(path, import.meta.url);
-const atlas = JSON.parse(fs.readFileSync(file('../public/models/atlas.json')));
+const atlases = ['atlas.json', 'atlas-female.json'].map((name) =>
+  JSON.parse(fs.readFileSync(file(`../public/models/${name}`))),
+);
+const [atlas] = atlases;
 const output = file('../public/models/names-es.json');
 
 function readTsv(path) {
-  return fs
+  const rows = fs
     .readFileSync(file(path), 'utf8')
     .split('\n')
     .filter((line) => line.trim() && !line.startsWith('#'))
@@ -27,6 +30,9 @@ function readTsv(path) {
       assert.ok(value && rest.length === 0, `${path}: malformed line "${line}"`);
       return [key, value];
     });
+  const duplicates = rows.map(([k]) => k).filter((k, i, all) => all.indexOf(k) !== i);
+  assert.deepEqual(duplicates, [], `${path}: duplicate entries`);
+  return rows;
 }
 
 // Wikidata labels are often title-cased ("Músculo sóleo"); store sentence case like the rest.
@@ -36,11 +42,13 @@ const overrides = new Map(readTsv('./i18n/names-es-overrides.tsv'));
 const wikidata = new Map(readTsv('./i18n/wikidata-fma-es.tsv'));
 const templates = new Map(readTsv('./i18n/names-es.tsv'));
 
-const idByName = new Map(atlas.concepts.map((c) => [c.name.toLowerCase(), c.id]));
-const names = new Set([
-  ...atlas.concepts.map((c) => c.name.toLowerCase()),
-  ...atlas.parts.map((p) => p.name.toLowerCase()),
-]);
+const idByName = new Map(atlas.concepts.map((c) => [c.name.toLowerCase().trim(), c.id]));
+const names = new Set(
+  atlases.flatMap((a) => [
+    ...a.concepts.map((c) => c.name.toLowerCase().trim()),
+    ...a.parts.map((p) => p.name.toLowerCase().trim()),
+  ]),
+);
 
 const ORDINALS = new Set(
   'primer primera segundo segunda tercer tercera cuarto cuarta quinto quinta sexto sexta séptimo séptima octavo octava noveno novena décimo décima undécimo undécima duodécimo duodécima'.split(
@@ -78,9 +86,9 @@ const PLACEHOLDER = /\{S(\d?):(m|f|mp|fp)\}/g;
 const sideless = new Map();
 for (const [english, spanish] of templates) {
   if (!english.includes('{S}')) continue;
-  const key = english.replace(/\{S\} /g, '');
+  const key = english.replace(/\{S\} /g, '').replace(/ \(\{S\}\)/g, '');
   if (!templates.has(key) && !sideless.has(key))
-    sideless.set(key, spanish.replace(/ \{S\d?:(?:m|f|mp|fp)\}/g, ''));
+    sideless.set(key, spanish.replace(/ \(\{S\d?:(?:m|f|mp|fp)\}\)| \{S\d?:(?:m|f|mp|fp)\}/g, ''));
 }
 
 const used = { overrides: new Set(), templates: new Set() };
@@ -109,7 +117,11 @@ function translate(name) {
     return spanish.replace(PLACEHOLDER, (_, n, g) => SIDE[sides[n ? Number(n) - 1 : 0]][g]);
   }
   if (sideless.has(name)) {
-    used.templates.add([...templates.keys()].find((t) => t.replace(/\{S\} /g, '') === name));
+    used.templates.add(
+      [...templates.keys()].find(
+        (t) => t.replace(/\{S\} /g, '').replace(/ \(\{S\}\)/g, '') === name,
+      ),
+    );
     return sideless.get(name);
   }
   return null;
@@ -123,6 +135,12 @@ for (const name of [...names].sort()) {
   else missing.push(name);
 }
 
+if (process.argv.includes('--missing')) {
+  // Print the untranslated names as templates (each left/right as {S}), for translating.
+  const pending = new Set(missing.map((n) => n.replace(/\b(left|right)\b/g, '{S}')));
+  console.log([...pending].sort().join('\n'));
+  process.exit(0);
+}
 assert.deepEqual(missing, [], `Missing Spanish names:\n${missing.join('\n')}`);
 for (const [name, spanish] of Object.entries(result))
   assert.ok(!/[{}]/.test(spanish) && !/ {2}/.test(spanish), `bad output for ${name}: ${spanish}`);

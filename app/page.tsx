@@ -15,16 +15,17 @@ import { ViewControls } from './panels/view-controls';
 import { ViewerError, errorCode, type ErrorCode } from './errors';
 import { useI18n } from './i18n';
 import {
-  DEFAULT_VISIBLE,
+  MODELS,
   SYSTEMS,
   type Atlas,
   type Concept,
   type SceneState,
+  type Sex,
   type SystemId,
 } from './anatomy';
 const initial: SceneState = {
   explode: 0,
-  visible: DEFAULT_VISIBLE,
+  visible: MODELS.male.defaultVisible,
   selected: [],
   isolate: false,
   view: 'three-quarter',
@@ -33,7 +34,8 @@ const initial: SceneState = {
 };
 export default function Home() {
   const { lang, setLang, t, n, name } = useI18n();
-  const [atlas, setAtlas] = useState<Atlas | null>(null),
+  const [sex, setSex] = useState<Sex>('male'),
+    [atlas, setAtlas] = useState<Atlas | null>(null),
     [state, setState] = useState(initial),
     [progress, setProgress] = useState(0),
     [error, setError] = useState<ErrorCode | null>(null),
@@ -49,8 +51,8 @@ export default function Home() {
     setAtlas(null);
     setChosen(null);
     setDetails(false);
-    setState({ ...initial, visible: DEFAULT_VISIBLE });
-    fetch('/models/atlas.json', { signal: abort.signal })
+    setState((s) => ({ ...initial, visible: MODELS[sex].defaultVisible, reset: s.reset + 1 }));
+    fetch(MODELS[sex].url, { signal: abort.signal })
       .then((r) => {
         if (!r.ok) throw new ViewerError('catalogue', 'The anatomy catalogue could not be loaded.');
         return r.json();
@@ -60,7 +62,7 @@ export default function Home() {
         if (e.name !== 'AbortError') setError(errorCode(e, 'catalogue'));
       });
     return () => abort.abort();
-  }, []);
+  }, [sex]);
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
       if (
@@ -120,7 +122,7 @@ export default function Home() {
     }));
   };
   const reset = () => {
-    setState((s) => ({ ...initial, visible: DEFAULT_VISIBLE, reset: s.reset + 1 }));
+    setState((s) => ({ ...initial, visible: MODELS[sex].defaultVisible, reset: s.reset + 1 }));
     setChosen(null);
     setDetails(false);
     setPanel(null);
@@ -162,7 +164,28 @@ export default function Home() {
           </Badge>
         </h1>
         <div className="identity-meta">
-          {n(atlas?.parts.length ?? 2234)} {t.header.pieces} <span>·</span> BodyParts3D
+          {n(atlas?.parts.length ?? MODELS[sex].pieces)} {t.header.pieces} <span>·</span>{' '}
+          {MODELS[sex].source}
+        </div>
+        <div className="anatomy-choice" role="group" aria-label={t.header.model}>
+          {(['male', 'female'] as Sex[]).map((option) => (
+            <button
+              key={option}
+              type="button"
+              aria-pressed={sex === option}
+              onClick={() => {
+                if (option === sex) return;
+                // Clear the previous atlas in the same render so header, caption and scene
+                // never pair one model's name with the other's geometry.
+                setAtlas(null);
+                setProgress(0);
+                setPanel(null);
+                setSex(option);
+              }}
+            >
+              {t.header.models[option]}
+            </button>
+          ))}
         </div>
       </header>
       <nav className="top-actions" aria-label={t.header.panels}>
@@ -214,7 +237,7 @@ export default function Home() {
         />
       )}
       <ViewControls state={state} setState={setState} onReset={reset} />
-      <SceneCaption state={state} chosenName={chosen ? name(chosen.name) : undefined} />
+      <SceneCaption state={state} sex={sex} chosenName={chosen ? name(chosen.name) : undefined} />
       <BottomDock
         state={state}
         setState={setState}
@@ -230,13 +253,18 @@ export default function Home() {
           {t.footer.credits} <ArrowUpRight size={12} />
         </Button>
       </footer>
-      <LoadStatus progress={progress} error={error} partCount={atlas?.parts.length} />
+      <LoadStatus
+        progress={progress}
+        error={error}
+        partCount={atlas?.parts.length ?? MODELS[sex].pieces}
+      />
       <DetailSheet
         open={details && selectedParts.length > 0}
         onOpenChange={setDetails}
         state={state}
         setState={setState}
         chosen={chosen}
+        sex={sex}
         selectedParts={selectedParts}
         onChoosePart={choosePart}
       />

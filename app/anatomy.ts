@@ -13,7 +13,8 @@ export type SystemId =
   | 'integumentary'
   | 'connective'
   | 'sensory'
-  | 'cardiac';
+  | 'cardiac'
+  | 'pregnancy';
 export const SYSTEMS: { id: SystemId; name: string; color: string; description: string }[] = [
   {
     id: 'skeletal',
@@ -120,6 +121,13 @@ export const SYSTEMS: { id: SystemId; name: string; color: string; description: 
     description:
       'Cartilage, ligaments, and other connective tissues support, connect, and separate structures. Their roles include stabilizing joints and distributing mechanical loads.',
   },
+  {
+    id: 'pregnancy',
+    name: 'Pregnancy reference',
+    color: '#b88380',
+    description:
+      'The placenta and umbilical cord support exchange between maternal and fetal circulations during pregnancy. These reference structures are shown separately from the default adult anatomy.',
+  },
 ];
 export interface Part {
   id: string;
@@ -146,7 +154,7 @@ export interface Concept {
 }
 export interface Atlas {
   version: string;
-  sex?: 'male';
+  sex?: Sex;
   source?: string;
   scope?: string;
   parts: Part[];
@@ -183,3 +191,24 @@ export const DEFAULT_VISIBLE: SystemId[] = [
   'reproductive',
   'connective',
 ];
+
+export type Sex = 'male' | 'female';
+/** The two reference collections; each has its own catalogue and geometry chunks. */
+export const MODELS: Record<
+  Sex,
+  { url: string; source: string; pieces: number; defaultVisible: SystemId[] }
+> = {
+  male: {
+    url: '/models/atlas.json',
+    source: 'BodyParts3D',
+    pieces: 2234,
+    defaultVisible: DEFAULT_VISIBLE,
+  },
+  female: {
+    url: '/models/atlas-female.json',
+    source: 'HRA',
+    pieces: 888,
+    // Skeleton and muscle coverage is partial, so the translucent body surface gives the outline.
+    defaultVisible: [...DEFAULT_VISIBLE, 'integumentary'],
+  },
+};

@@ -11,7 +11,7 @@
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "lint": "oxlint --deny-warnings",
-    "validate": "node scripts/validate-atlas.mjs && node scripts/validate-interactions.mjs && node scripts/build-names-es.mjs --check"
+    "validate": "node scripts/validate-atlas.mjs && node scripts/validate-atlas.mjs atlas-female.json && node scripts/validate-interactions.mjs && node scripts/build-names-es.mjs --check"
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",

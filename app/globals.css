@@ -963,20 +963,6 @@ body:has(.detail-sheet) [data-slot='sheet-overlay'] {
   margin-top: 15px;
   pointer-events: auto;
 }
-.anatomy-choice [data-slot='select-trigger'] {
-  min-height: 36px;
-  font-size: 12px;
-  letter-spacing: 0.02em;
-  border: 1px solid #18253620;
-  border-radius: 4px;
-  color: #485866;
-  padding: 6px 10px;
-  background: #ffffffd9;
-}
-.anatomy-choice-menu [data-slot='select-item'] {
-  min-height: 44px;
-  font-size: 14px;
-}
 .identity {
   z-index: 2;
 }
@@ -986,10 +972,6 @@ body:has(.detail-sheet) [data-slot='sheet-overlay'] {
 @media (max-width: 767px) {
   .anatomy-choice {
     margin-top: 10px;
-  }
-  .anatomy-choice [data-slot='select-trigger'] {
-    min-height: 40px;
-    font-size: 12px;
   }
   .layers-panel.mobile-open {
     top: auto;
@@ -1004,9 +986,6 @@ body:has(.detail-sheet) [data-slot='sheet-overlay'] {
 @media (max-height: 600px) and (orientation: landscape) {
   .anatomy-choice {
     margin-top: 7px;
-  }
-  .anatomy-choice [data-slot='select-trigger'] {
-    min-height: 36px;
   }
   .layers-panel.mobile-open {
     top: 132px;
@@ -1210,13 +1189,6 @@ h1 .edition {
 }
 .anatomy-choice {
   margin-top: 14px;
-}
-.anatomy-choice [data-slot='select-trigger'] {
-  border-radius: 9px;
-  min-height: 38px;
-  color: var(--foreground);
-  background: #ffffffd9;
-  box-shadow: 0 1px 2px #18253604;
 }
 .top-actions {
   gap: 8px;
@@ -1519,9 +1491,6 @@ h1 .edition {
   }
   .identity-meta {
     font-size: 10px;
-  }
-  .anatomy-choice [data-slot='select-trigger'] {
-    min-height: 40px;
   }
   .layers-panel.mobile-open {
     border-radius: 16px;
@@ -1865,4 +1834,34 @@ h1 .edition {
   color: #87929d;
   text-transform: capitalize;
   margin-top: -6px;
+}
+/* Male/female reference model switch in the header. */
+.anatomy-choice {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 10px;
+  background: #ffffffd9;
+  border: 1px solid #18253614;
+  box-shadow: 0 1px 2px #18253604;
+}
+.anatomy-choice button {
+  min-height: 32px;
+  padding: 0 14px;
+  border-radius: 7px;
+  font-size: 12px;
+  color: #5a6876;
+}
+.anatomy-choice button[aria-pressed='true'] {
+  background: #263b48;
+  color: #ffffff;
+}
+.anatomy-choice button[aria-pressed='true']:hover {
+  background: #3b5261;
+  color: #ffffff;
+}
+@media (max-width: 767px) {
+  .anatomy-choice button {
+    min-height: 36px;
+  }
 }

@@ -3,13 +3,21 @@ import assert from 'node:assert/strict';
 import { gunzipSync } from 'node:zlib';
 import { MeshoptDecoder } from 'meshoptimizer/decoder';
 await MeshoptDecoder.ready;
-const filename = process.argv[2] ?? 'atlas.json';
+const filename = process.argv[2] ?? 'atlas.json',
+  female = filename.includes('female');
 const base = new URL('../public/models/', import.meta.url),
   atlas = JSON.parse(fs.readFileSync(new URL(filename, base)));
-assert.equal(atlas.parts.length, 2234);
-assert.equal(atlas.concepts.length, 3432);
+const expected = female ? { parts: 888, concepts: 1073 } : { parts: 2234, concepts: 3432 };
+assert.equal(atlas.parts.length, expected.parts);
+assert.equal(atlas.concepts.length, expected.concepts);
 const ids = new Set(atlas.parts.map((p) => p.id));
-assert.equal(ids.size, 2234);
+assert.equal(ids.size, expected.parts);
+if (female) {
+  assert.equal(atlas.parts.filter((p) => p.system === 'pregnancy').length, 8);
+  for (const label of ['uterus', 'ovary', 'vagina'])
+    assert.ok(atlas.parts.some((p) => p.name.toLowerCase().includes(label)));
+  assert.ok(!atlas.parts.some((p) => /prostate|testis|penis/i.test(p.name)));
+}
 const files = atlas.chunks.map((c) => {
   const gz = fs.readFileSync(new URL(c.url.split('/').pop(), base));
   assert.equal(gz.length, c.gzipBytes);

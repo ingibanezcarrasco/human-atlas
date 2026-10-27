@@ -38,6 +38,8 @@ export function LayersPanel({
   const { t, n } = useI18n();
   const show = (visible: SystemId[]) =>
     setState((s) => ({ ...s, selected: [], isolate: false, visible }));
+  // The pregnancy reference layer is opt-in: "All" means the adult anatomy.
+  const adultSystems = systems.filter((x) => x.id !== 'pregnancy');
   return (
     <section
       className={`layers-panel glass ${mobileOpen ? 'mobile-open' : ''}`}
@@ -60,8 +62,8 @@ export function LayersPanel({
       <div className="layer-presets">
         <Button
           variant="ghost"
-          aria-pressed={systems.every((x) => state.visible.includes(x.id))}
-          onClick={() => show(systems.map((x) => x.id))}
+          aria-pressed={adultSystems.every((x) => state.visible.includes(x.id))}
+          onClick={() => show(adultSystems.map((x) => x.id))}
         >
           {t.layers.all}
         </Button>

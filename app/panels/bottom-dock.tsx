@@ -1,7 +1,7 @@
 import { Layers3, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
-import type { SceneState, SetSceneState } from '../anatomy';
+import type { SceneState, SetSceneState, Sex } from '../anatomy';
 import { useI18n } from '../i18n';
 
 interface Props {
@@ -66,7 +66,15 @@ export function BottomDock({ state, setState, onReset, onOpenLayers }: Props) {
   );
 }
 
-export function SceneCaption({ state, chosenName }: { state: SceneState; chosenName?: string }) {
+export function SceneCaption({
+  state,
+  sex,
+  chosenName,
+}: {
+  state: SceneState;
+  sex: Sex;
+  chosenName?: string;
+}) {
   const { t } = useI18n();
   return (
     <div className="scene-caption">
@@ -78,7 +86,7 @@ export function SceneCaption({ state, chosenName }: { state: SceneState; chosenN
             ? t.caption.inventory
             : state.explode > 0.05
               ? t.caption.separated
-              : t.caption.assembled}
+              : t.caption.assembled[sex]}
       </span>
       <span className="caption-line" />
     </div>

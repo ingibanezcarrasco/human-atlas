@@ -2,7 +2,14 @@ import { useRef } from 'react';
 import { ArrowUpRight, ChevronRight, Focus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTitle, SheetDescription } from '@/components/ui/sheet';
-import { SYSTEMS, type Concept, type Part, type SceneState, type SetSceneState } from '../anatomy';
+import {
+  SYSTEMS,
+  type Concept,
+  type Part,
+  type SceneState,
+  type SetSceneState,
+  type Sex,
+} from '../anatomy';
 import { useI18n } from '../i18n';
 
 const MAX_MEMBERS = 50;
@@ -13,6 +20,7 @@ interface Props {
   state: SceneState;
   setState: SetSceneState;
   chosen: Concept | null;
+  sex: Sex;
   selectedParts: Part[];
   onChoosePart: (id: string) => void;
 }
@@ -23,6 +31,7 @@ export function DetailSheet({
   state,
   setState,
   chosen,
+  sex,
   selectedParts,
   onChoosePart,
 }: Props) {
@@ -53,7 +62,12 @@ export function DetailSheet({
         </div>
         <div className="detail-scroll" key={`${chosen?.id}-${state.isolate}`}>
           <SheetDescription className="structure-description">
-            {chosen && selected ? (organNote ?? t.systems[selected.system].description) : ''}
+            {chosen && selected
+              ? (organNote ??
+                (sex === 'female' && selected.system === 'reproductive'
+                  ? t.femaleReproductive
+                  : t.systems[selected.system].description))
+              : ''}
           </SheetDescription>
           {chosen && !organNote && <span className="context-note">{t.detail.contextNote}</span>}
           <div className="structure-meta">

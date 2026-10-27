@@ -20,6 +20,7 @@ export function AboutSheet({
       href: 'https://academic.oup.com/nar/article/37/suppl_1/D782/1000752',
       label: t.about.publication,
     },
+    { href: 'https://doi.org/10.48539/HBM352.BTSQ.586', label: t.about.femaleDataset },
   ];
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -33,10 +34,16 @@ export function AboutSheet({
             <br />
             {t.about.dataset}
           </p>
+          <p>
+            <strong>{t.about.femaleTitle}</strong>
+            <br />
+            {t.about.female}
+          </p>
           <p>{t.about.scope}</p>
           <p>{t.about.disclaimer}</p>
           <h3>{t.about.sourceHeading}</h3>
           <p>{t.about.source}</p>
+          <p>{t.about.femaleSource}</p>
           {links.map(({ href, label }) => (
             <a key={href} href={href} target="_blank" rel="noreferrer">
               {label} <ArrowUpRight size={14} />

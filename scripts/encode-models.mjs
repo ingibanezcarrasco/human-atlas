@@ -66,11 +66,42 @@ const append = (data) => {
 };
 
 const round = (v) => Math.round(v * 1e6) / 1e6;
+
+/**
+ * Some source vertices have a zero normal (opposite normals cancelled when welding), which renders
+ * black. Replace those with the area-weighted normal of the triangles that use the vertex.
+ */
+function repairZeroNormals(pos, normal, indices) {
+  const zero = [];
+  for (let v = 0; v < normal.length / 3; v++)
+    if (!normal[v * 3] && !normal[v * 3 + 1] && !normal[v * 3 + 2]) zero.push(v);
+  if (!zero.length) return;
+  const sum = new Map(zero.map((v) => [v, [0, 0, 0]]));
+  for (let t = 0; t < indices.length; t += 3) {
+    const [a, b, c] = [indices[t], indices[t + 1], indices[t + 2]];
+    if (!sum.has(a) && !sum.has(b) && !sum.has(c)) continue;
+    const e1 = [0, 1, 2].map((k) => pos[b * 3 + k] - pos[a * 3 + k]),
+      e2 = [0, 1, 2].map((k) => pos[c * 3 + k] - pos[a * 3 + k]),
+      cross = [
+        e1[1] * e2[2] - e1[2] * e2[1],
+        e1[2] * e2[0] - e1[0] * e2[2],
+        e1[0] * e2[1] - e1[1] * e2[0],
+      ];
+    for (const v of [a, b, c]) sum.get(v)?.forEach((_, k, n) => (n[k] += cross[k]));
+  }
+  for (const [v, n] of sum) {
+    const length = Math.hypot(...n);
+    // A vertex used by no (non-degenerate) triangle gets an arbitrary unit normal.
+    const unit = length ? n.map((x) => x / length) : [0, 1, 0];
+    for (let k = 0; k < 3; k++) normal[v * 3 + k] = Math.round(unit[k] * 32767);
+  }
+}
 for (const { p } of order) {
   const b = source[p.chunk];
   const pos = new Float32Array(b.buffer, b.byteOffset + p.positions, p.vertexCount * 3),
     normal = new Int16Array(b.buffer, b.byteOffset + p.normals, p.vertexCount * 3),
     indices = Uint32Array.from(new Uint32Array(b.buffer, b.byteOffset + p.indices, p.indexCount));
+  repairZeroNormals(pos, normal, indices);
   // Reorders `indices` in place; remap[old] is the new vertex index (unused vertices dropped).
   const [remap, unique] = MeshoptEncoder.reorderMesh(indices, true, true);
   const lo = p.bounds[0].map(round),
