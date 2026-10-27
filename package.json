@@ -10,7 +10,7 @@
     "check": "tsc --noEmit",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
-    "lint": "oxlint",
+    "lint": "oxlint --deny-warnings",
     "validate": "node scripts/validate-atlas.mjs && node scripts/validate-interactions.mjs"
   },
   "dependencies": {
