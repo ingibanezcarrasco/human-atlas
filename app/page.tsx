@@ -27,7 +27,7 @@ import {
   ComboboxItem,
   ComboboxEmpty,
 } from '@/components/ui/combobox';
-import AnatomyScene from './scene';
+import AnatomyScene from './scene/anatomy-scene';
 import {
   DEFAULT_VISIBLE,
   SYSTEMS,
