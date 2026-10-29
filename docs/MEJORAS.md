@@ -45,6 +45,11 @@ para poder retomar el trabajo. El README describe el uso del proyecto; aquí se 
 
 ## Pendiente (ideas propuestas)
 
+- **Modelo femenino completo** (próximo tema): buscar alternativas para que tenga musculatura y esqueleto completos. Opciones a evaluar:
+  - un modelo comercial servido fuera del repositorio público, revisando antes la licencia;
+  - ajustar músculos de otra fuente sobre el esqueleto de HRA;
+  - generar o adaptar la geometría a partir de BodyParts3D;
+  - seguir las nuevas versiones de HRA.
 - **Accesibilidad**:
   - navegación por teclado del visor 3D;
   - anuncios para lectores de pantalla al seleccionar una estructura;
