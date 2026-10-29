@@ -328,6 +328,7 @@ export default function Home() {
         systems={activeSystems}
         counts={counts}
         visibleCount={visibleCount}
+        partial={MODELS[sex].partial}
         mobileOpen={panel === 'layers'}
         onClose={() => setPanel(null)}
         onToggle={toggle}

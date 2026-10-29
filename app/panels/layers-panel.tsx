@@ -20,6 +20,8 @@ interface Props {
   systems: typeof SYSTEMS;
   counts: Record<string, number>;
   visibleCount: number;
+  /** Systems this model covers only in part. */
+  partial: SystemId[];
   mobileOpen: boolean;
   onClose: () => void;
   onToggle: (id: SystemId) => void;
@@ -31,6 +33,7 @@ export function LayersPanel({
   systems,
   counts,
   visibleCount,
+  partial,
   mobileOpen,
   onClose,
   onToggle,
@@ -85,6 +88,14 @@ export function LayersPanel({
           {t.layers.organs}
         </Button>
       </div>
+      {partial.length > 0 && (
+        <p className="partial-note">
+          {t.layers.partialNote(
+            partial.map((id) => t.systems[id].name.toLowerCase()),
+            partial.map((id) => n(counts[id] ?? 0)),
+          )}
+        </p>
+      )}
       <div className="system-list">
         {systems.map((s) => (
           <div className={`system-row ${state.visible.includes(s.id) ? 'enabled' : ''}`} key={s.id}>
@@ -96,6 +107,11 @@ export function LayersPanel({
             >
               <span className="system-dot" style={{ background: s.color }} />
               {t.systems[s.id].name}
+              {partial.includes(s.id) && (
+                <span className="partial-tag" title={t.layers.partialTitle}>
+                  {t.layers.partial}
+                </span>
+              )}
               <span className="system-count">{counts[s.id]}</span>
             </Button>
             <Switch

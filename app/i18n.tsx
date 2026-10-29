@@ -38,6 +38,10 @@ const en = {
     show: (system: string) => `Show ${system.toLowerCase()}`,
     visible: (n: string) => `${n} pieces visible`,
     hideAll: 'Hide all',
+    partial: 'partial',
+    partialTitle: 'The source collection includes only some of these structures.',
+    partialNote: (systems: string[], counts: string[]) =>
+      `This model's ${systems.join(' and ')} are incomplete: the source collection includes only ${counts.map((c, i) => `${c} ${systems[i] === 'skeleton' ? 'skeletal pieces' : systems[i]}`).join(' and ')}.`,
   },
   search: {
     region: 'Find anatomy',
@@ -237,6 +241,10 @@ const es: Messages = {
     show: (system) => `Mostrar ${system.toLowerCase()}`,
     visible: (n) => `${n} piezas visibles`,
     hideAll: 'Ocultar todo',
+    partial: 'parcial',
+    partialTitle: 'La colección de origen solo incluye parte de estas estructuras.',
+    partialNote: (systems, counts) =>
+      `En este modelo, ${systems.map((s) => (s === 'esqueleto' ? 'el esqueleto' : `los ${s}`)).join(' y ')} están incompletos: la colección de origen solo incluye ${counts.map((c, i) => `${c} ${systems[i] === 'esqueleto' ? 'piezas óseas' : systems[i]}`).join(' y ')}.`,
   },
   search: {
     region: 'Buscar en la anatomía',

@@ -36,6 +36,10 @@ para poder retomar el trabajo. El README describe el uso del proyecto; aquí se 
   - Solo se pregunta por estructuras de los sistemas visibles.
   - Durante la práctica se ocultan los nombres al pasar el ratón y la ficha de detalle.
 - **Enlaces** (`app/study/share-link.ts`): `?model=female&concept=FMA7088&view=front&explode=40&layers=skeletal,cardiac&isolate=1`. `part=` sustituye a `concept=` cuando se tocó una pieza suelta. La posición exacta de la cámara al girar no se guarda, solo la vista predefinida.
+- **Modelo femenino incompleto**:
+  - La fuente HRA solo trae 16 músculos y 91 piezas de esqueleto. La v1.8 tiene los mismos músculos.
+  - El panel de capas lo avisa con `MODELS.female.partial`.
+  - No hay ninguna alternativa abierta. Los modelos comerciales prohíben distribuir los archivos descargables, y eso choca con un repositorio y una web públicos.
 - **Publicar**: se hace push directo a `main` con la cuenta `ingibanezcarrasco`.
 - **Comprobaciones** antes de cada commit: `npm run format:check && npm run lint && npm run check && npm run validate && npm run build`.
 

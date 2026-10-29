@@ -196,13 +196,21 @@ export type Sex = 'male' | 'female';
 /** The two reference collections; each has its own catalogue and geometry chunks. */
 export const MODELS: Record<
   Sex,
-  { url: string; source: string; pieces: number; defaultVisible: SystemId[] }
+  {
+    url: string;
+    source: string;
+    pieces: number;
+    defaultVisible: SystemId[];
+    /** Systems the source covers only in part, flagged in the layers panel. */
+    partial: SystemId[];
+  }
 > = {
   male: {
     url: '/models/atlas.json',
     source: 'BodyParts3D',
     pieces: 2234,
     defaultVisible: DEFAULT_VISIBLE,
+    partial: [],
   },
   female: {
     url: '/models/atlas-female.json',
@@ -210,5 +218,6 @@ export const MODELS: Record<
     pieces: 888,
     // Skeleton and muscle coverage is partial, so the translucent body surface gives the outline.
     defaultVisible: [...DEFAULT_VISIBLE, 'integumentary'],
+    partial: ['skeletal', 'muscular'],
   },
 };
