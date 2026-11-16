@@ -366,7 +366,7 @@ export function buildVulva(a) {
   return {
     parts,
     landmarks: { Vf, I, U, G, P, root, pb },
-    shape: { crusPath, crusR, bulbPath, bulbR },
+    shape: { crusPath, crusR, bulbPath, bulbR, urethraPath, vagPath },
   };
 }
 
@@ -457,6 +457,178 @@ export function perinealMuscles(a, v) {
     ),
   );
   return { parts, landmarks: { tbMed } };
+}
+
+/**
+ * Deep perineal plane (deep perineal pouch): the perineal membrane, a sheet stretched between the
+ * ischiopubic rami with openings for the urethra and the vagina, and the muscles just above it:
+ * external urethral sphincter, compressor urethrae, sphincter urethrovaginalis and deep transverse
+ * perineal muscles.
+ * @param a anchors (needs `ramus` and `tuberosity`)
+ * @param v result of buildVulva
+ * @param m result of perinealMuscles
+ */
+export function deepPerineum(a, v, m) {
+  const { urethraPath, vagPath } = v.shape,
+    { pb, root } = v.landmarks,
+    { tbMed } = m.landmarks;
+  const parts = [];
+  const part = (id, name, system, geom) => parts.push({ id: `HYB_${id}`, name, system, geom });
+  const pair = (id, name, geomOf) => {
+    part(`${id}_L`, `Left ${name}`, 'muscular', geomOf(1));
+    part(`${id}_R`, `Right ${name}`, 'muscular', geomOf(-1));
+  };
+  const lerp = (x0, x1, t) => x0 + (x1 - x0) * t;
+
+  // Medial edge of the ramus as functions of z (the polyline runs from the symphysis backwards).
+  // The detected edge stops partway down the ramus; continue it to the tuberosity.
+  const ramus = [...a.ramus, add(tbMed, [0.001, -0.002, 0])].sort((p, q) => q[2] - p[2]);
+  const along = (z, k) => {
+    if (z >= ramus[0][2]) return ramus[0][k];
+    for (let i = 1; i < ramus.length; i++)
+      if (z >= ramus[i][2]) {
+        const t = (z - ramus[i - 1][2]) / (ramus[i][2] - ramus[i - 1][2]);
+        return lerp(ramus[i - 1][k], ramus[i][k], t);
+      }
+    return lerp(ramus.at(-1)[k], tbMed[k], 1);
+  };
+  // Outline: from just behind the symphysis (transverse perineal ligament) back to a posterior
+  // border that runs from each tuberosity to the perineal body.
+  const zFront = root[2] - 0.006,
+    zt = tbMed[2],
+    xt = tbMed[0] - 0.002,
+    zMid = pb[2] + 0.007;
+  const halfWidth = (z) => {
+    const xr = z >= ramus.at(-1)[2] ? along(z, 0) : lerp(ramus.at(-1)[0], xt, 1);
+    if (z >= zt) return Math.min(xr, xt) - 0.001;
+    return Math.min(xt * ((z - zMid) / (zt - zMid)) ** (1 / 1.5), xt);
+  };
+  // Height: on the inner edge of the ramus, 2 mm above it (just above the crura), sloping to the
+  // top of the perineal body behind the tuberosities.
+  const yt = along(zt, 1) + 0.002;
+  const height = (z) =>
+    z >= zt ? along(z, 1) + 0.002 : lerp(yt, pb[1] + 0.006, (zt - z) / (zt - zMid));
+
+  // Where the urethra and the vagina pierce the membrane.
+  const cross = (path) =>
+    path.reduce((b, p) => (Math.abs(p[1] - height(p[2])) < Math.abs(b[1] - height(b[2])) ? p : b));
+  const uX = cross(urethraPath),
+    vX = cross(vagPath);
+  const holes = [
+    { c: uX, r: [0.0045, 0.0045] },
+    { c: vX, r: [0.012, 0.0065] },
+  ];
+  const inHole = (x, z) =>
+    holes.some(({ c, r }) => ((x - c[0]) / r[0]) ** 2 + ((z - c[2]) / r[1]) ** 2 < 1);
+
+  {
+    const mb = new MeshBuilder(),
+      NU = 40,
+      zs = [];
+    for (let z = zFront; z >= zMid; z -= 0.0012) zs.push(z);
+    const grid = zs.map((z) => {
+      const w = halfWidth(z);
+      return Array.from({ length: NU + 1 }, (_, i) => {
+        const x = (2 * i) / NU - 1;
+        return mb.vertex([x * w, height(z) + 0.0015 * (1 - x * x), z], [0, 1, 0]);
+      });
+    });
+    const P = mb.p;
+    for (let j = 0; j + 1 < zs.length; j++)
+      for (let i = 0; i < NU; i++) {
+        const q = [grid[j][i], grid[j][i + 1], grid[j + 1][i + 1], grid[j + 1][i]];
+        const cx = q.reduce((s, k) => s + P[k * 3], 0) / 4,
+          cz = q.reduce((s, k) => s + P[k * 3 + 2], 0) / 4;
+        if (inHole(cx, cz)) continue;
+        mb.tri(q[0], q[1], q[2]);
+        mb.tri(q[0], q[2], q[3]);
+      }
+    part('perineal_membrane', 'Perineal membrane', 'connective', mb.geometry());
+  }
+
+  // External urethral sphincter: a sleeve around the middle third of the urethra, above the
+  // membrane.
+  const ju = urethraPath.indexOf(uX),
+    eus = [uX];
+  for (let j = ju - 1, len = 0; j >= 1 && len < 0.015; j--) {
+    len += Math.hypot(...sub(urethraPath[j], urethraPath[j + 1]));
+    eus.unshift(urethraPath[j]);
+  }
+  part(
+    'external_urethral_sphincter',
+    'External urethral sphincter',
+    'muscular',
+    tube(eus, (t) => [0.0058 - 0.0006 * t, 0.0052 - 0.0006 * t]),
+  );
+
+  // Compressor urethrae: an arch from one ramus to the other over the front of the urethra, just
+  // above the membrane and below the sphincter.
+  const zc = uX[2] + 0.002,
+    yc = height(zc) + 0.0035,
+    wc = halfWidth(zc) - 0.002;
+  const compPath = spline(
+    [
+      [wc, height(zc) + 0.002, zc - 0.004],
+      [wc * 0.5, yc, zc + 0.002],
+      [0, yc + 0.001, uX[2] + 0.0075],
+      [-wc * 0.5, yc, zc + 0.002],
+      [-wc, height(zc) + 0.002, zc - 0.004],
+    ],
+    40,
+  );
+  part(
+    'compressor_urethrae',
+    'Compressor urethrae',
+    'muscular',
+    tube(compPath, (t) => [0.0022, 0.0035 - 0.0012 * Math.abs(2 * t - 1)], {
+      lateral: [0, 1, 0],
+    }),
+  );
+
+  // Sphincter urethrovaginalis: a loop in front of the urethra that runs back along both sides of
+  // the vagina to the perineal body.
+  const yv = (z) => height(z) + 0.003;
+  const svPath = spline(
+    [
+      [0.006, pb[1] + 0.004, pb[2] + 0.006],
+      [0.014, yv(vX[2] - 0.006), vX[2] - 0.006],
+      [0.0145, yv(vX[2] + 0.004), vX[2] + 0.004],
+      [0.008, yv(uX[2] - 0.002), uX[2] - 0.002],
+      [0, yv(uX[2] + 0.006) + 0.001, uX[2] + 0.0065],
+      [-0.008, yv(uX[2] - 0.002), uX[2] - 0.002],
+      [-0.0145, yv(vX[2] + 0.004), vX[2] + 0.004],
+      [-0.014, yv(vX[2] - 0.006), vX[2] - 0.006],
+      [-0.006, pb[1] + 0.004, pb[2] + 0.006],
+    ],
+    60,
+  );
+  part(
+    'sphincter_urethrovaginalis',
+    'Sphincter urethrovaginalis',
+    'muscular',
+    tube(svPath, () => [0.0018, 0.0026], { lateral: [0, 1, 0] }),
+  );
+
+  // Deep transverse perineal muscle: from the inner surface of the ramus near the tuberosity to
+  // the perineal body and the lateral wall of the vagina, just above the membrane.
+  const zd = zt + 0.004;
+  const dtpPath = spline(
+    [
+      [halfWidth(zd) - 0.002, height(zd) + 0.0045, zd],
+      [0.026, height(lerp(zd, pb[2] + 0.008, 0.5)) + 0.005, lerp(zd, pb[2] + 0.008, 0.5)],
+      [0.01, height(pb[2] + 0.008) + 0.005, pb[2] + 0.008],
+    ],
+    20,
+  );
+  pair('deep_transverse_perineal', 'deep transverse perineal muscle', (s) =>
+    tube(
+      dtpPath.map((p) => (s > 0 ? p : mirror(p))),
+      (t) => [0.0045 - 0.0015 * t, 0.0016],
+      { lateral: [0, 0, 1] },
+    ),
+  );
+
+  return { parts, landmarks: { urethraCross: uX, vaginaCross: vX, zFront, zMid } };
 }
 
 /**

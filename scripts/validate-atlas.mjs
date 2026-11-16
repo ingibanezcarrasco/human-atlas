@@ -9,7 +9,7 @@ const base = new URL('../public/models/', import.meta.url),
   atlas = JSON.parse(fs.readFileSync(new URL(filename, base)));
 // The female model is BodyParts3D without male-only structures plus the HRA female ones
 // (scripts/build-female-hybrid.mjs).
-const expected = female ? { parts: 2300, concepts: 3573 } : { parts: 2234, concepts: 3432 };
+const expected = female ? { parts: 2306, concepts: 3580 } : { parts: 2234, concepts: 3432 };
 assert.equal(atlas.parts.length, expected.parts);
 assert.equal(atlas.concepts.length, expected.concepts);
 const ids = new Set(atlas.parts.map((p) => p.id));

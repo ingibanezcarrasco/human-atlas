@@ -19,7 +19,7 @@ import fs from 'node:fs';
 import { readAtlas, modelsDir, centroid, bounds } from './atlas-geometry.mjs';
 import { pelvisLandmarks, measure } from './pelvis-landmarks.mjs';
 import { femalePelvisWarp, RATIOS } from './pelvis-warp.mjs';
-import { buildVulva, vulvaSkin, ramusEdge, perinealMuscles } from './vulva.mjs';
+import { buildVulva, vulvaSkin, ramusEdge, perinealMuscles, deepPerineum } from './vulva.mjs';
 
 const hraDir = new URL('../data/hra-female/', import.meta.url);
 const M = await readAtlas('atlas.json'),
@@ -545,11 +545,12 @@ const anchors = {
   tuberosity: femLm.L.tuberosity,
 };
 const vulva = buildVulva(anchors),
-  perineum = perinealMuscles(anchors, vulva);
+  perineum = perinealMuscles(anchors, vulva),
+  deep = deepPerineum(anchors, vulva, perineum);
 const skinOut = out.find((o) => o.part.id === SKIN),
   vskin = vulvaSkin(skinOut.geom, vulva.landmarks);
 skinOut.geom = vskin.skin;
-for (const v of [...vulva.parts, ...vskin.labia, ...perineum.parts])
+for (const v of [...vulva.parts, ...vskin.labia, ...perineum.parts, ...deep.parts])
   out.push({
     part: {
       id: v.id,
@@ -578,6 +579,11 @@ const vulvaGroups = [
     name: 'Muscles of urogenital triangle',
     elements: perineum.parts.map((v) => v.id),
   },
+  {
+    id: 'HYB:deep-perineal-pouch',
+    name: 'Deep perineal pouch',
+    elements: deep.parts.map((v) => v.id),
+  },
 ];
 const f3 = (p) => p.map((v) => (v * 1000).toFixed(0)).join('/');
 log(
@@ -589,6 +595,10 @@ log(
 log(
   `Perineal muscles: ${perineum.parts.length} structures; tuberosity ${f3(anchors.tuberosity)}, ` +
     `origin ${f3(perineum.landmarks.tbMed)}, perineal body ${f3(vulva.landmarks.pb)}`,
+);
+log(
+  `Deep perineum: ${deep.parts.length} structures; urethra crosses the membrane at ` +
+    `${f3(deep.landmarks.urethraCross)}, vagina at ${f3(deep.landmarks.vaginaCross)}`,
 );
 
 // Concepts: male concepts without the removed parts, the HRA concepts of the imported parts, and
