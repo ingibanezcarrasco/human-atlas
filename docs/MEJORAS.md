@@ -5,16 +5,17 @@ para poder retomar el trabajo. El README describe el uso del proyecto; aquí se 
 
 ## Hecho
 
-| Fase                        | Commits                                 | Resumen                                                                                                                                                                                         |
-| --------------------------- | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1. Mantenibilidad           | `4e65674` `a582293` `e1755e3` `7192368` | Se eliminaron componentes y dependencias sin uso (Cloudflare, wrangler, recharts…). Formato con oxfmt y lint con oxlint. `scene.tsx` se dividió en `app/scene/*` y `page.tsx` en `app/panels/*` |
-| 2. CI                       | `179aa58`                               | GitHub Actions (`.github/workflows/ci.yml`) ejecuta format, lint, typecheck, validate y build en cada push                                                                                      |
-| 3. Español                  | `fad457a` `27d1475`                     | Interfaz bilingüe (botón EN/ES, se guarda en `localStorage`). 4.129 nombres anatómicos en español                                                                                               |
-| 4. Rendimiento              | `bebc2f5`                               | Descarga del modelo masculino: 33,5 → 14,7 MB. Carga por prioridad: esqueleto y órganos primero                                                                                                 |
-| 5. Modelo femenino          | `6daea8a`                               | Selector Masculino/Femenino. 888 piezas HRA, 8,2 MB. Capa de embarazo oculta por defecto                                                                                                        |
-| 6. Herramientas de estudio  | —                                       | Modo práctica (Nombrar / Localizar, nivel Principales o Todas) y enlaces compartibles con la vista                                                                                              |
-| 7. Modelo femenino completo | (este commit)                           | Modelo híbrido: BodyParts3D sin estructuras masculinas + aparato reproductor, mamas y embarazo de HRA ajustados a la pelvis y el tórax. 2.280 piezas, 15,8 MB. Piel remodelada                  |
-| 8. Pelvis ósea femenina     | (este commit)                           | Deformación suave (RBF de Wendland, 39 puntos de control, caderas y L5 fijas) de la pelvis de BodyParts3D y todo lo que la rodea hacia proporciones femeninas; medidas a ≤3 mm del objetivo     |
+| Fase                        | Commits                                 | Resumen                                                                                                                                                                                                                 |
+| --------------------------- | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. Mantenibilidad           | `4e65674` `a582293` `e1755e3` `7192368` | Se eliminaron componentes y dependencias sin uso (Cloudflare, wrangler, recharts…). Formato con oxfmt y lint con oxlint. `scene.tsx` se dividió en `app/scene/*` y `page.tsx` en `app/panels/*`                         |
+| 2. CI                       | `179aa58`                               | GitHub Actions (`.github/workflows/ci.yml`) ejecuta format, lint, typecheck, validate y build en cada push                                                                                                              |
+| 3. Español                  | `fad457a` `27d1475`                     | Interfaz bilingüe (botón EN/ES, se guarda en `localStorage`). 4.129 nombres anatómicos en español                                                                                                                       |
+| 4. Rendimiento              | `bebc2f5`                               | Descarga del modelo masculino: 33,5 → 14,7 MB. Carga por prioridad: esqueleto y órganos primero                                                                                                                         |
+| 5. Modelo femenino          | `6daea8a`                               | Selector Masculino/Femenino. 888 piezas HRA, 8,2 MB. Capa de embarazo oculta por defecto                                                                                                                                |
+| 6. Herramientas de estudio  | —                                       | Modo práctica (Nombrar / Localizar, nivel Principales o Todas) y enlaces compartibles con la vista                                                                                                                      |
+| 7. Modelo femenino completo | (este commit)                           | Modelo híbrido: BodyParts3D sin estructuras masculinas + aparato reproductor, mamas y embarazo de HRA ajustados a la pelvis y el tórax. 2.280 piezas, 15,8 MB. Piel remodelada                                          |
+| 8. Pelvis ósea femenina     | (este commit)                           | Deformación suave (RBF de Wendland, 39 puntos de control, caderas y L5 fijas) de la pelvis de BodyParts3D y todo lo que la rodea hacia proporciones femeninas; medidas a ≤3 mm del objetivo                             |
+| 9. Vulva y uretra femenina  | (este commit)                           | Mallas paramétricas (`scripts/vulva.mjs`): uretra, labios mayores y menores, clítoris (glande, cuerpo, pilares), bulbos, glándulas vestibulares, orificio vaginal, cuerpo perineal. Conceptos de grupo Vulva y Clítoris |
 
 ### Detalles útiles para retomar
 
@@ -46,6 +47,7 @@ para poder retomar el trabajo. El README describe el uso del proyecto; aquí se 
   - Mamas: escala por estatura y apoyadas sobre el pectoral mayor (mediana de la separación).
   - Vasos testiculares → ováricos (mismo origen, cortados en el estrecho superior de la pelvis); uretra cortada a sus 4 cm proximales; piel sin genitales externos masculinos y cubriendo las mamas.
   - Pelvis ósea (fase 8): `scripts/pelvis-landmarks.mjs` detecta las referencias (tuberosidades, espinas, sínfisis, EIAS, crestas, promontorio, cóccix…) y mide; `scripts/pelvis-warp.mjs` define los cocientes mujer/hombre (`RATIOS`) y las ganancias de calibración (`GAIN`). El build imprime la tabla hombre/mujer/objetivo y el jacobiano mínimo (debe ser > 0: sin pliegues; hoy 0,60). Las cabezas femorales, trocánteres y L5 son anclas fijas. La malla del coxal es gruesa (~1000 vértices): el ángulo subpúbico (86° → 102°) solo vale como comparación.
+  - Vulva y uretra (fase 9): `scripts/vulva.mjs` genera tubos (spline Catmull-Rom) y elipsoides anclados al modelo ya deformado: piso del vestíbulo 2 cm bajo el final de la vagina, meato 1,6 cm delante del orificio vaginal, glande bajo la sínfisis, pilares siguiendo el borde medial de las ramas isquiopúbicas (`ramusEdge`). La piel entre los muslos (restos del escroto) se recorta y los labios mayores son una superficie de altura diseñada que se une a la piel que queda (altura tomada del borde de la piel conservada). Revisión con cortes coronales/sagitales (matplotlib) y `?concept=HYB:vulva&isolate=1`.
   - Para regenerarlo: `node scripts/build-female-hybrid.mjs && node scripts/encode-models.mjs atlas-female.json && node scripts/build-names-es.mjs`.
 - **Publicar**: se hace push directo a `main` con la cuenta `ingibanezcarrasco`.
 - **Comprobaciones** antes de cada commit: `npm run format:check && npm run lint && npm run check && npm run validate && npm run build`.
@@ -53,7 +55,8 @@ para poder retomar el trabajo. El README describe el uso del proyecto; aquí se 
 ## Pendiente (ideas propuestas)
 
 - **Modelo femenino, siguientes pasos**:
-  - vulva y uretra femenina propias (HRA no las trae; la piel solo se remodeló de forma aproximada);
+  - músculos del triángulo urogenital (bulboesponjoso, isquiocavernoso, transverso superficial del periné), que tampoco trae BodyParts3D;
+  - himen (variable entre personas; se omitió);
   - revisión por alguien con formación anatómica de la colocación de útero y ovarios.
 - **Accesibilidad**:
   - navegación por teclado del visor 3D;

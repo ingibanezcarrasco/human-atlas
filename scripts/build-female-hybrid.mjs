@@ -19,6 +19,7 @@ import fs from 'node:fs';
 import { readAtlas, modelsDir, centroid, bounds } from './atlas-geometry.mjs';
 import { pelvisLandmarks, measure } from './pelvis-landmarks.mjs';
 import { femalePelvisWarp, RATIOS } from './pelvis-warp.mjs';
+import { buildVulva, vulvaSkin, ramusEdge } from './vulva.mjs';
 
 const hraDir = new URL('../data/hra-female/', import.meta.url);
 const M = await readAtlas('atlas.json'),
@@ -448,11 +449,7 @@ for (const g of M.parts.values()) {
     part.name = GONADAL[id];
     part.conceptId = `HYB:${GONADAL[id].toLowerCase().replaceAll(' ', '-')}`;
   } else if (id === URETHRA) {
-    // The female urethra is about 4 cm long: keep the part from the bladder neck down to the
-    // perineal membrane, without the penile course.
-    geom = cut(g, (p) => p[1] > 0.83 && p[2] < 0.002);
-    part.conceptId = 'HYB:female-urethra';
-    part.name = 'Female urethra';
+    continue; // replaced by the female urethra built in step 7
   } else if (id === SKIN) {
     geom = reshapeSkin(g, [...breastGeoms.values()]);
   }
@@ -510,11 +507,10 @@ for (const o of out) {
   }
   if (touched) warped++;
 }
-const femM = measure(
-  pelvisLandmarks(
+const femLm = pelvisLandmarks(
     new Map(out.map((o) => [o.part.id, o.geom])).set('FJ3259', M.parts.get('FJ3259')),
   ),
-);
+  femM = measure(femLm);
 log(
   `Female pelvis: ${warp.controls} control points, ${warped} structures deformed, minimum Jacobian ${minDet.toFixed(2)}`,
 );
@@ -523,6 +519,66 @@ for (const k of Object.keys(maleM))
   log(
     `  ${k.padEnd(16)} ${String(maleM[k]).padStart(5)} ${String(femM[k]).padStart(6)}   ${RATIOS[k] ? '×' + RATIOS[k] + ' → ' + Math.round(maleM[k] * RATIOS[k]) : ''}`,
   );
+
+// ---------------------------------------------------------------------------------------------
+// 7. Vulva and female urethra (vulva.mjs), anchored to the finished pelvis and organs.
+const geomOf = (id) => out.find((o) => o.part.id === id).geom;
+const pointsOf = (id) => {
+  const P = geomOf(id).positions,
+    pts = [];
+  for (let i = 0; i < P.length; i += 3) pts.push([P[i], P[i + 1], P[i + 2]]);
+  return pts;
+};
+const lowest = (pts) => pts.reduce((a, p) => (p[1] < a[1] ? p : a));
+const vaginaPts = pointsOf('VH_F_vagina'),
+  analPts = [...pointsOf('FJ2548'), ...pointsOf('FJ1450M')];
+const anchors = {
+  sb: [0, femLm.L.symphysisBottom[1], femLm.L.symphysisBottom[2]],
+  ramus: ramusEdge(geomOf('FJ3288'), femLm),
+  bladderNeck: [0, ...lowest(pointsOf('FJ3149').filter((p) => Math.abs(p[0]) < 0.008)).slice(1)],
+  vaginaLow: [0, ...lowest(vaginaPts).slice(1)],
+  vaginaFront: (y) => {
+    const near = vaginaPts.filter((p) => Math.abs(p[1] - y) < 0.004 && Math.abs(p[0]) < 0.01);
+    return near.length ? Math.max(...near.map((p) => p[2])) : lowest(vaginaPts)[2] + 0.006;
+  },
+  anus: [0, lowest(analPts)[1], analPts.reduce((s, p) => s + p[2], 0) / analPts.length],
+};
+const vulva = buildVulva(anchors);
+const skinOut = out.find((o) => o.part.id === SKIN),
+  vskin = vulvaSkin(skinOut.geom, vulva.landmarks);
+skinOut.geom = vskin.skin;
+for (const v of [...vulva.parts, ...vskin.labia])
+  out.push({
+    part: {
+      id: v.id,
+      name: v.name,
+      system: v.system,
+      conceptId: `HYB:${v.name.toLowerCase().replaceAll(' ', '-')}`,
+    },
+    geom: v.geom,
+  });
+// Group concepts so the whole vulva and the clitoris can be searched for and isolated.
+const vulvaGroups = [
+  {
+    id: 'HYB:clitoris',
+    name: 'Clitoris',
+    elements: vulva.parts.filter((v) => /clitoris/i.test(v.name)).map((v) => v.id),
+  },
+  {
+    id: 'HYB:vulva',
+    name: 'Vulva',
+    elements: [...vulva.parts, ...vskin.labia]
+      .filter((v) => /clitoris|labium|bulb|vestibular|vaginal orifice/i.test(v.name))
+      .map((v) => v.id),
+  },
+];
+const f3 = (p) => p.map((v) => (v * 1000).toFixed(0)).join('/');
+log(
+  `Vulva: ${vulva.parts.length + vskin.labia.length} structures; vestibule floor ${f3([vulva.landmarks.Vf])} mm, ` +
+    `glans ${f3(vulva.landmarks.G)}, meatus ${f3(vulva.landmarks.U)}, orifice ${f3(vulva.landmarks.I)}, ` +
+    `bladder neck ${f3(anchors.bladderNeck)}, vagina end ${f3(anchors.vaginaLow)}, anus ${f3(anchors.anus)}, ` +
+    `${anchors.ramus.length} ramus points`,
+);
 
 // Concepts: male concepts without the removed parts, the HRA concepts of the imported parts, and
 // one concept per renamed part.
@@ -537,6 +593,7 @@ const addConcept = (c) => {
 };
 M.manifest.concepts.forEach(addConcept);
 F.manifest.concepts.filter((c) => c.name !== 'VH F').forEach(addConcept);
+vulvaGroups.forEach(addConcept);
 for (const { part } of out)
   if (part.conceptId.startsWith('HYB:'))
     addConcept({ id: part.conceptId, name: part.name, elements: [part.id] });
@@ -615,6 +672,7 @@ const manifest = {
 };
 fs.writeFileSync(new URL('atlas-female.json', modelsDir), JSON.stringify(manifest));
 log(
-  `atlas-female.json: ${parts.length} parts (${out.length - PELVIC.length - BREAST.length} BodyParts3D + ` +
-    `${PELVIC.length + BREAST.length} HRA), ${concepts.length} concepts, ${triangles.toLocaleString()} triangles`,
+  `atlas-female.json: ${parts.length} parts (${parts.filter((p) => p.id.startsWith('FJ')).length} BodyParts3D + ` +
+    `${PELVIC.length + BREAST.length} HRA + ${parts.filter((p) => p.id.startsWith('HYB_')).length} generated), ` +
+    `${concepts.length} concepts, ${triangles.toLocaleString()} triangles`,
 );

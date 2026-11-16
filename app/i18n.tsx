@@ -141,7 +141,7 @@ const en = {
       '2,234 individual meshes and 3,432 named concepts from an adult male reference anatomy.',
     femaleTitle: 'Female · BodyParts3D + Human Reference Atlas',
     female:
-      '2,280 meshes. The structures common to both sexes (complete skeleton, muscles, vessels, nerves and organs) come from BodyParts3D without its male-only structures; the uterus, uterine tubes, ovaries, vagina, their ligaments and vessels, and the breasts come from the Human Reference Atlas, fitted into that pelvis and chest. The bony pelvis was reshaped toward female proportions (wider outlet and pubic arch, rounder inlet, wider and shorter sacrum), and the body surface to match. Eight pregnancy reference pieces are in a separate layer, hidden by default.',
+      '2,280 meshes. The structures common to both sexes (complete skeleton, muscles, vessels, nerves and organs) come from BodyParts3D without its male-only structures; the uterus, uterine tubes, ovaries, vagina, their ligaments and vessels, and the breasts come from the Human Reference Atlas, fitted into that pelvis and chest. The bony pelvis was reshaped toward female proportions (wider outlet and pubic arch, rounder inlet, wider and shorter sacrum), and the body surface to match. The vulva and the female urethra are schematic generated meshes. Eight pregnancy reference pieces are in a separate layer, hidden by default.',
     scope:
       'These collections have different coverage. Neither contains every human structure or variation. Named concepts can contain multiple pieces; each source mesh is rendered once.',
     disclaimer:
@@ -177,7 +177,7 @@ const en = {
   ) as Record<SystemId, { name: string; description: string }>,
   /** Replaces the (male) reproductive system description in the female atlas. */
   femaleReproductive:
-    'Female reproductive structures include the ovaries, uterine tubes, uterus, cervix, and vagina. Together they support oocyte development, fertilization, menstruation, and pregnancy.',
+    'Female reproductive structures include the ovaries, uterine tubes, uterus, cervix, and vagina, and the vulva: labia, clitoris, vestibular bulbs and glands. Together they support oocyte development, fertilization, menstruation, pregnancy, and sexual response.',
   /** Short explanations for individual organs, keyed by the atlas (English) concept name. */
   explanations: {
     heart:
@@ -341,7 +341,7 @@ const es: Messages = {
       '2.234 mallas individuales y 3.432 conceptos con nombre de una anatomía de referencia de un varón adulto.',
     femaleTitle: 'Femenina · BodyParts3D + Human Reference Atlas',
     female:
-      '2.280 mallas. Las estructuras comunes a ambos sexos (esqueleto completo, músculos, vasos, nervios y órganos) vienen de BodyParts3D sin sus estructuras exclusivamente masculinas; el útero, las trompas, los ovarios, la vagina, sus ligamentos y vasos, y las mamas vienen del Human Reference Atlas, ajustados a esa pelvis y ese tórax. La pelvis ósea se deformó hacia proporciones femeninas (estrecho inferior y arco púbico más anchos, estrecho superior más redondo, sacro más ancho y corto), y la superficie corporal en consecuencia. Ocho piezas de referencia del embarazo están en una capa aparte, oculta por defecto.',
+      '2.280 mallas. Las estructuras comunes a ambos sexos (esqueleto completo, músculos, vasos, nervios y órganos) vienen de BodyParts3D sin sus estructuras exclusivamente masculinas; el útero, las trompas, los ovarios, la vagina, sus ligamentos y vasos, y las mamas vienen del Human Reference Atlas, ajustados a esa pelvis y ese tórax. La pelvis ósea se deformó hacia proporciones femeninas (estrecho inferior y arco púbico más anchos, estrecho superior más redondo, sacro más ancho y corto), y la superficie corporal en consecuencia. La vulva y la uretra femenina son mallas generadas, esquemáticas. Ocho piezas de referencia del embarazo están en una capa aparte, oculta por defecto.',
     scope:
       'Las dos colecciones tienen coberturas distintas. Ninguna incluye todas las estructuras ni variaciones del cuerpo humano. Un concepto con nombre puede abarcar varias piezas; cada malla de origen se dibuja una sola vez.',
     disclaimer:
@@ -456,7 +456,7 @@ const es: Messages = {
     },
   },
   femaleReproductive:
-    'Las estructuras reproductoras femeninas incluyen los ovarios, las trompas uterinas, el útero, el cuello uterino y la vagina. Juntas participan en el desarrollo de los ovocitos, la fecundación, la menstruación y el embarazo.',
+    'Las estructuras reproductoras femeninas incluyen los ovarios, las trompas uterinas, el útero, el cuello uterino y la vagina, y la vulva: labios, clítoris, bulbos y glándulas del vestíbulo. Juntas participan en el desarrollo de los ovocitos, la fecundación, la menstruación, el embarazo y la respuesta sexual.',
   explanations: {
     heart:
       'Una bomba muscular situada en el tórax. Su lado derecho envía la sangre a los pulmones; su lado izquierdo la impulsa por la circulación sistémica.',

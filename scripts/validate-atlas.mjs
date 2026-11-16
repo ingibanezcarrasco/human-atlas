@@ -9,7 +9,7 @@ const base = new URL('../public/models/', import.meta.url),
   atlas = JSON.parse(fs.readFileSync(new URL(filename, base)));
 // The female model is BodyParts3D without male-only structures plus the HRA female ones
 // (scripts/build-female-hybrid.mjs).
-const expected = female ? { parts: 2280, concepts: 3551 } : { parts: 2234, concepts: 3432 };
+const expected = female ? { parts: 2294, concepts: 3566 } : { parts: 2234, concepts: 3432 };
 assert.equal(atlas.parts.length, expected.parts);
 assert.equal(atlas.concepts.length, expected.concepts);
 const ids = new Set(atlas.parts.map((p) => p.id));
@@ -23,7 +23,16 @@ if (female) {
       /prostate|testis|testicular|penis|seminal|epididym|deferent/i.test(p.name),
     ),
   );
-  for (const label of ['femur', 'pectoralis major', 'mammary', 'ovarian artery'])
+  for (const label of [
+    'femur',
+    'pectoralis major',
+    'mammary',
+    'ovarian artery',
+    'clitoris',
+    'labium minus',
+    'labium majus',
+    'female urethra',
+  ])
     assert.ok(
       atlas.parts.some((p) => p.name.toLowerCase().includes(label)),
       label,
