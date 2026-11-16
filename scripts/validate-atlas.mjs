@@ -7,7 +7,9 @@ const filename = process.argv[2] ?? 'atlas.json',
   female = filename.includes('female');
 const base = new URL('../public/models/', import.meta.url),
   atlas = JSON.parse(fs.readFileSync(new URL(filename, base)));
-const expected = female ? { parts: 888, concepts: 1073 } : { parts: 2234, concepts: 3432 };
+// The female model is BodyParts3D without male-only structures plus the HRA female ones
+// (scripts/build-female-hybrid.mjs).
+const expected = female ? { parts: 2280, concepts: 3551 } : { parts: 2234, concepts: 3432 };
 assert.equal(atlas.parts.length, expected.parts);
 assert.equal(atlas.concepts.length, expected.concepts);
 const ids = new Set(atlas.parts.map((p) => p.id));
@@ -16,7 +18,16 @@ if (female) {
   assert.equal(atlas.parts.filter((p) => p.system === 'pregnancy').length, 8);
   for (const label of ['uterus', 'ovary', 'vagina'])
     assert.ok(atlas.parts.some((p) => p.name.toLowerCase().includes(label)));
-  assert.ok(!atlas.parts.some((p) => /prostate|testis|penis/i.test(p.name)));
+  assert.ok(
+    !atlas.parts.some((p) =>
+      /prostate|testis|testicular|penis|seminal|epididym|deferent/i.test(p.name),
+    ),
+  );
+  for (const label of ['femur', 'pectoralis major', 'mammary', 'ovarian artery'])
+    assert.ok(
+      atlas.parts.some((p) => p.name.toLowerCase().includes(label)),
+      label,
+    );
 }
 const files = atlas.chunks.map((c) => {
   const gz = fs.readFileSync(new URL(c.url.split('/').pop(), base));

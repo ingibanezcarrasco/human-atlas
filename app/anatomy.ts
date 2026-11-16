@@ -214,10 +214,10 @@ export const MODELS: Record<
   },
   female: {
     url: '/models/atlas-female.json',
-    source: 'HRA',
-    pieces: 888,
-    // Skeleton and muscle coverage is partial, so the translucent body surface gives the outline.
+    source: 'BodyParts3D + HRA',
+    pieces: 2280,
+    // The translucent body surface shows the female outline (breasts, pelvis).
     defaultVisible: [...DEFAULT_VISIBLE, 'integumentary'],
-    partial: ['skeletal', 'muscular'],
+    partial: [],
   },
 };

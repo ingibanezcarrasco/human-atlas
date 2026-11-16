@@ -14,9 +14,12 @@ import fs from 'node:fs';
 import assert from 'node:assert/strict';
 
 const file = (path) => new URL(path, import.meta.url);
-const atlases = ['atlas.json', 'atlas-female.json'].map((name) =>
-  JSON.parse(fs.readFileSync(file(`../public/models/${name}`))),
-);
+// The HRA female source set (data/hra-female) is included so its names stay translated.
+const atlases = [
+  '../public/models/atlas.json',
+  '../public/models/atlas-female.json',
+  '../data/hra-female/atlas-female.json',
+].map((path) => JSON.parse(fs.readFileSync(file(path))));
 const [atlas] = atlases;
 const output = file('../public/models/names-es.json');
 

@@ -139,9 +139,9 @@ const en = {
     datasetTitle: 'Male · BodyParts3D',
     dataset:
       '2,234 individual meshes and 3,432 named concepts from an adult male reference anatomy.',
-    femaleTitle: 'Female · Human Reference Atlas',
+    femaleTitle: 'Female · BodyParts3D + Human Reference Atlas',
     female:
-      '888 source meshes, including the whole-body surface, selected organs, and female reproductive anatomy. Skeleton and muscle coverage is partial. Eight pregnancy reference pieces are in a separate layer, hidden by default.',
+      '2,280 meshes. The structures common to both sexes (complete skeleton, muscles, vessels, nerves and organs) come from BodyParts3D without its male-only structures; the uterus, uterine tubes, ovaries, vagina, their ligaments and vessels, and the breasts come from the Human Reference Atlas, fitted into that pelvis and chest. The body surface was reshaped. Eight pregnancy reference pieces are in a separate layer, hidden by default.',
     scope:
       'These collections have different coverage. Neither contains every human structure or variation. Named concepts can contain multiple pieces; each source mesh is rendered once.',
     disclaimer:
@@ -339,9 +339,9 @@ const es: Messages = {
     datasetTitle: 'Masculina · BodyParts3D',
     dataset:
       '2.234 mallas individuales y 3.432 conceptos con nombre de una anatomía de referencia de un varón adulto.',
-    femaleTitle: 'Femenina · Human Reference Atlas',
+    femaleTitle: 'Femenina · BodyParts3D + Human Reference Atlas',
     female:
-      '888 mallas de origen, con la superficie corporal completa, órganos seleccionados y la anatomía reproductora femenina. La cobertura del esqueleto y los músculos es parcial. Ocho piezas de referencia del embarazo están en una capa aparte, oculta por defecto.',
+      '2.280 mallas. Las estructuras comunes a ambos sexos (esqueleto completo, músculos, vasos, nervios y órganos) vienen de BodyParts3D sin sus estructuras exclusivamente masculinas; el útero, las trompas, los ovarios, la vagina, sus ligamentos y vasos, y las mamas vienen del Human Reference Atlas, ajustados a esa pelvis y ese tórax. La superficie corporal se remodeló. Ocho piezas de referencia del embarazo están en una capa aparte, oculta por defecto.',
     scope:
       'Las dos colecciones tienen coberturas distintas. Ninguna incluye todas las estructuras ni variaciones del cuerpo humano. Un concepto con nombre puede abarcar varias piezas; cada malla de origen se dibuja una sola vez.',
     disclaimer:

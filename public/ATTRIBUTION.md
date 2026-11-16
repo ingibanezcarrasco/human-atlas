@@ -31,3 +31,14 @@ Kristen Browne and Heidi Schlehlein, Human Reference Atlas / HuBMAP, _3D Referen
 Adaptations: translated native meter/Y-up coordinates onto the stage, coincident vertices welded and source normals averaged, geometry simplified with a 0.2% per-structure relative error bound, positions and normals quantized and encoded as for the male model, and vertices whose welded normals cancelled out given face-based normals. Colors and display systems are curated for this interface. All 888 source meshes are represented, with 1,073 source nodes available as selectable individual or compound concepts.
 
 This is a reference assembly with whole-body surface and selected organs, including female reproductive anatomy. Its skeleton and muscle coverage is partial. It is not a complete model of every human structure or a single-person scan. Eight placenta/umbilical structures are classified under Pregnancy reference and hidden by default.
+
+### Female model shown in the viewer (hybrid)
+
+Because the HRA female set covers the skeleton and muscles only in part, the female model in the viewer combines both collections (`scripts/build-female-hybrid.mjs`; the HRA source set is kept in `data/hra-female/`):
+
+- **From BodyParts3D:** every structure common to both sexes, without the male-only ones (penis, testes, epididymides, deferent ducts, seminal vesicles, prostate, and the dorsal vessels of the penis).
+- **From HRA:** the uterus and cervix, uterine tubes, ovaries, vagina, the ligaments of the uterus and ovaries, the uterine vessels, the breasts, and the pregnancy reference layer (66 meshes).
+- **Fitting:** the HRA pelvic organs are scaled in width to the BodyParts3D pelvis (femoral heads), keep their real height and depth, and are placed with the lower end of the vagina at the urogenital hiatus of the pelvic floor, turned to stay clear of the bladder, rectum and bones as far as possible. The breasts are scaled by body height and rest on pectoralis major.
+- **Adapted from BodyParts3D:** the gonadal vessels keep their origin and stop at the pelvic brim (ovarian instead of testicular vessels); the urethra keeps its proximal 4 cm; the body surface has no external male genitalia and covers the breasts.
+
+The combination is an educational approximation of female anatomy built from two different bodies; it is not a single-person reference.
