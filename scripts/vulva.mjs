@@ -363,7 +363,100 @@ export function buildVulva(a) {
   const pb = [0, (Vf + a.anus[1]) / 2 + 0.004, (P[2] + a.anus[2]) / 2];
   part('perineal_body', 'Perineal body', 'connective', ellipsoid(pb, [0.009, 0.008, 0.007]));
 
-  return { parts, landmarks: { Vf, I, U, G, P, root } };
+  return {
+    parts,
+    landmarks: { Vf, I, U, G, P, root, pb },
+    shape: { crusPath, crusR, bulbPath, bulbR },
+  };
+}
+
+/**
+ * Superficial muscles of the urogenital triangle, around the structures built by buildVulva:
+ * ischiocavernosus over each crus (from the ischial tuberosity and ramus), bulbospongiosus over the
+ * lateral surface of each bulb (from the perineal body to the body of the clitoris), and the
+ * superficial transverse perineal muscle (from the tuberosity to the perineal body).
+ * @param a anchors (needs `tuberosity`, the lowest point of the left ischial tuberosity)
+ * @param v result of buildVulva
+ */
+export function perinealMuscles(a, v) {
+  const { crusPath, crusR, bulbPath, bulbR } = v.shape,
+    { pb, root } = v.landmarks;
+  const parts = [];
+  const pair = (id, name, geomL) => {
+    parts.push({ id: `HYB_${id}_L`, name: `Left ${name}`, system: 'muscular', geom: geomL(1) });
+    parts.push({ id: `HYB_${id}_R`, name: `Right ${name}`, system: 'muscular', geom: geomL(-1) });
+  };
+  const side = (p, s) => (s > 0 ? p : mirror(p));
+  // Medial face of the tuberosity, a little above its lowest point.
+  const tbMed = add(a.tuberosity, [-0.007, 0.01, 0.006]);
+
+  // Ischiocavernosus: a sleeve over the crus from 20 % of its length, continued as a tapering
+  // origin to the tuberosity. Concentric with the crus, 1.6 mm thicker.
+  const j0 = Math.round(0.2 * (crusPath.length - 1));
+  const sleeve = crusPath.slice(j0),
+    tOf = sleeve.map((_, j) => (j0 + j) / (crusPath.length - 1));
+  const end = sleeve.at(-1),
+    ext = [];
+  for (let k = 1; k <= 6; k++) ext.push(add(end, mul(sub(tbMed, end), k / 6)));
+  const icPath = [...sleeve, ...ext];
+  const icR = (t) => {
+    const j = Math.round(t * (icPath.length - 1));
+    if (j < sleeve.length) {
+      const [r] = crusR(tOf[j]);
+      return [r + 0.0016, r + 0.0016];
+    }
+    const k = (j - sleeve.length + 1) / ext.length,
+      r = crusR(1)[0] + 0.0016;
+    return [r * (1 - 0.55 * k), r * (1 - 0.3 * k)];
+  };
+  pair('ischiocavernosus', 'ischiocavernosus', (s) =>
+    tube(
+      icPath.map((p) => side(p, s)),
+      icR,
+    ),
+  );
+
+  // Bulbospongiosus: a band against the lateral surface of the bulb, from the side of the perineal
+  // body to the body of the clitoris.
+  const nb = bulbPath.length - 1;
+  const offBulb = (t) => {
+    const p = bulbPath[Math.round(t * nb)],
+      [ra] = bulbR(t);
+    return add(p, [ra + 0.0019, -0.0005, 0]);
+  };
+  const bsPath = spline(
+    [
+      [0.007, pb[1] + 0.001, pb[2] + 0.004],
+      offBulb(1),
+      offBulb(0.7),
+      offBulb(0.4),
+      offBulb(0.12),
+      [0.0055, root[1] - 0.001, root[2] + 0.005],
+    ],
+    36,
+  );
+  const bsR = (t) => [0.0015, 0.0018 + 0.0065 * Math.sin(Math.PI * t) ** 0.6];
+  pair('bulbospongiosus', 'bulbospongiosus', (s) =>
+    tube(
+      bsPath.map((p) => side(p, s)),
+      bsR,
+    ),
+  );
+
+  // Superficial transverse perineal muscle: a thin strap from the tuberosity to the perineal body.
+  const stpPath = spline(
+    [tbMed, add(mul(add(tbMed, pb), 0.5), [0, -0.002, 0.002]), [0.008, pb[1], pb[2]]],
+    16,
+  );
+  const stpR = (t) => [0.0042 - 0.0012 * t, 0.0022 - 0.0004 * t];
+  pair('superficial_transverse_perineal', 'superficial transverse perineal muscle', (s) =>
+    tube(
+      stpPath.map((p) => side(p, s)),
+      stpR,
+      { lateral: [0, 0, 1] },
+    ),
+  );
+  return { parts, landmarks: { tbMed } };
 }
 
 /**

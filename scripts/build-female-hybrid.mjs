@@ -19,7 +19,7 @@ import fs from 'node:fs';
 import { readAtlas, modelsDir, centroid, bounds } from './atlas-geometry.mjs';
 import { pelvisLandmarks, measure } from './pelvis-landmarks.mjs';
 import { femalePelvisWarp, RATIOS } from './pelvis-warp.mjs';
-import { buildVulva, vulvaSkin, ramusEdge } from './vulva.mjs';
+import { buildVulva, vulvaSkin, ramusEdge, perinealMuscles } from './vulva.mjs';
 
 const hraDir = new URL('../data/hra-female/', import.meta.url);
 const M = await readAtlas('atlas.json'),
@@ -542,12 +542,14 @@ const anchors = {
     return near.length ? Math.max(...near.map((p) => p[2])) : lowest(vaginaPts)[2] + 0.006;
   },
   anus: [0, lowest(analPts)[1], analPts.reduce((s, p) => s + p[2], 0) / analPts.length],
+  tuberosity: femLm.L.tuberosity,
 };
-const vulva = buildVulva(anchors);
+const vulva = buildVulva(anchors),
+  perineum = perinealMuscles(anchors, vulva);
 const skinOut = out.find((o) => o.part.id === SKIN),
   vskin = vulvaSkin(skinOut.geom, vulva.landmarks);
 skinOut.geom = vskin.skin;
-for (const v of [...vulva.parts, ...vskin.labia])
+for (const v of [...vulva.parts, ...vskin.labia, ...perineum.parts])
   out.push({
     part: {
       id: v.id,
@@ -571,6 +573,11 @@ const vulvaGroups = [
       .filter((v) => /clitoris|labium|bulb|vestibular|vaginal orifice/i.test(v.name))
       .map((v) => v.id),
   },
+  {
+    id: 'HYB:superficial-perineal-muscles',
+    name: 'Muscles of urogenital triangle',
+    elements: perineum.parts.map((v) => v.id),
+  },
 ];
 const f3 = (p) => p.map((v) => (v * 1000).toFixed(0)).join('/');
 log(
@@ -578,6 +585,10 @@ log(
     `glans ${f3(vulva.landmarks.G)}, meatus ${f3(vulva.landmarks.U)}, orifice ${f3(vulva.landmarks.I)}, ` +
     `bladder neck ${f3(anchors.bladderNeck)}, vagina end ${f3(anchors.vaginaLow)}, anus ${f3(anchors.anus)}, ` +
     `${anchors.ramus.length} ramus points`,
+);
+log(
+  `Perineal muscles: ${perineum.parts.length} structures; tuberosity ${f3(anchors.tuberosity)}, ` +
+    `origin ${f3(perineum.landmarks.tbMed)}, perineal body ${f3(vulva.landmarks.pb)}`,
 );
 
 // Concepts: male concepts without the removed parts, the HRA concepts of the imported parts, and
