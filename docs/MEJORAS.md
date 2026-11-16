@@ -14,6 +14,7 @@ para poder retomar el trabajo. El README describe el uso del proyecto; aquí se 
 | 5. Modelo femenino          | `6daea8a`                               | Selector Masculino/Femenino. 888 piezas HRA, 8,2 MB. Capa de embarazo oculta por defecto                                                                                                        |
 | 6. Herramientas de estudio  | —                                       | Modo práctica (Nombrar / Localizar, nivel Principales o Todas) y enlaces compartibles con la vista                                                                                              |
 | 7. Modelo femenino completo | (este commit)                           | Modelo híbrido: BodyParts3D sin estructuras masculinas + aparato reproductor, mamas y embarazo de HRA ajustados a la pelvis y el tórax. 2.280 piezas, 15,8 MB. Piel remodelada                  |
+| 8. Pelvis ósea femenina     | (este commit)                           | Deformación suave (RBF de Wendland, 39 puntos de control, caderas y L5 fijas) de la pelvis de BodyParts3D y todo lo que la rodea hacia proporciones femeninas; medidas a ≤3 mm del objetivo     |
 
 ### Detalles útiles para retomar
 
@@ -44,6 +45,7 @@ para poder retomar el trabajo. El README describe el uso del proyecto; aquí se 
   - Pelvis: ancho escalado por las cabezas femorales, altura y profundidad reales; el extremo inferior de la vagina va al hiato urogenital (debajo del vértice de la próstata, delante del conducto anal) y se gira hasta 12° para chocar lo menos posible con vejiga, recto y huesos (queda ~13 % de muestras en contacto: el espacio rectovesical masculino es estrecho).
   - Mamas: escala por estatura y apoyadas sobre el pectoral mayor (mediana de la separación).
   - Vasos testiculares → ováricos (mismo origen, cortados en el estrecho superior de la pelvis); uretra cortada a sus 4 cm proximales; piel sin genitales externos masculinos y cubriendo las mamas.
+  - Pelvis ósea (fase 8): `scripts/pelvis-landmarks.mjs` detecta las referencias (tuberosidades, espinas, sínfisis, EIAS, crestas, promontorio, cóccix…) y mide; `scripts/pelvis-warp.mjs` define los cocientes mujer/hombre (`RATIOS`) y las ganancias de calibración (`GAIN`). El build imprime la tabla hombre/mujer/objetivo y el jacobiano mínimo (debe ser > 0: sin pliegues; hoy 0,60). Las cabezas femorales, trocánteres y L5 son anclas fijas. La malla del coxal es gruesa (~1000 vértices): el ángulo subpúbico (86° → 102°) solo vale como comparación.
   - Para regenerarlo: `node scripts/build-female-hybrid.mjs && node scripts/encode-models.mjs atlas-female.json && node scripts/build-names-es.mjs`.
 - **Publicar**: se hace push directo a `main` con la cuenta `ingibanezcarrasco`.
 - **Comprobaciones** antes de cada commit: `npm run format:check && npm run lint && npm run check && npm run validate && npm run build`.
@@ -51,7 +53,6 @@ para poder retomar el trabajo. El README describe el uso del proyecto; aquí se 
 ## Pendiente (ideas propuestas)
 
 - **Modelo femenino, siguientes pasos**:
-  - pelvis ósea femenina (más ancha y con mayor ángulo subpúbico): hoy se usa la masculina de BodyParts3D;
   - vulva y uretra femenina propias (HRA no las trae; la piel solo se remodeló de forma aproximada);
   - revisión por alguien con formación anatómica de la colocación de útero y ovarios.
 - **Accesibilidad**:

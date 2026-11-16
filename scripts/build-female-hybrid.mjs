@@ -10,11 +10,15 @@
 //   * Sex-neutral structures whose course differs are adapted: the gonadal vessels keep their origin
 //     and stop at the pelvic brim (ovarian instead of testicular), the urethra keeps only its
 //     proximal 4 cm, and the body surface is reshaped (no external male genitalia, breasts).
+//   * The bony pelvis is reshaped toward female proportions by a smooth space deformation
+//     (pelvis-warp.mjs) applied to everything around it, with the hip joints and spine held fixed.
 //
 // The output is a raw manifest + .bin chunks that scripts/encode-models.mjs then encodes.
 // Usage: node scripts/build-female-hybrid.mjs && node scripts/encode-models.mjs atlas-female.json
 import fs from 'node:fs';
 import { readAtlas, modelsDir, centroid, bounds } from './atlas-geometry.mjs';
+import { pelvisLandmarks, measure } from './pelvis-landmarks.mjs';
+import { femalePelvisWarp, RATIOS } from './pelvis-warp.mjs';
 
 const hraDir = new URL('../data/hra-female/', import.meta.url);
 const M = await readAtlas('atlas.json'),
@@ -459,6 +463,66 @@ for (const g of [...PELVIC, ...BREAST]) {
   const geom = pelvicGeoms.get(g.part.id) ?? breastGeoms.get(g.part.id);
   out.push({ part: { ...g.part }, geom });
 }
+
+// ---------------------------------------------------------------------------------------------
+// 6. Female bony pelvis: deform the whole region (see pelvis-warp.mjs).
+const maleLm = pelvisLandmarks(M.parts),
+  maleM = measure(maleLm);
+// Held fixed: both femoral heads (centre and six points on a 2 cm sphere, so they stay rigid), the
+// greater trochanters and the fifth lumbar vertebra.
+const fixed = [];
+for (const s of [1, -1]) {
+  const c = [s * maleLm.L.acetabulum[0], maleLm.L.acetabulum[1], maleLm.L.acetabulum[2]];
+  fixed.push(c);
+  for (let k = 0; k < 3; k++)
+    for (const d of [0.02, -0.02]) fixed.push(c.map((v, i) => (i === k ? v + d : v)));
+  const femur = M.parts.get(s > 0 ? 'FJ3259' : 'FJ3365').positions;
+  let troch = null;
+  for (let i = 0; i < femur.length; i += 3)
+    if (femur[i + 1] > c[1] - 0.04 && (!troch || s * femur[i] > s * troch[0]))
+      troch = Array.from(femur.slice(i, i + 3));
+  fixed.push(troch);
+}
+fixed.push(centroid([M.parts.get('FJ3168')]));
+const warp = femalePelvisWarp(maleLm, maleM, fixed);
+let warped = 0,
+  minDet = Infinity;
+for (const o of out) {
+  const g = o.geom,
+    P = g.positions;
+  let touched = false;
+  for (let i = 0; i < P.length; i += 3) {
+    const p = [P[i], P[i + 1], P[i + 2]];
+    if (!warp.near(p)) continue;
+    const q = warp.point(p);
+    if (q[0] === p[0] && q[1] === p[1] && q[2] === p[2]) continue;
+    if (!touched) {
+      o.geom = {
+        positions: Float32Array.from(P),
+        normals: Float32Array.from(g.normals),
+        indices: g.indices,
+      };
+      touched = true;
+    }
+    o.geom.positions.set(q, i);
+    o.geom.normals.set(warp.normal(p, Array.from(g.normals.slice(i, i + 3))), i);
+    if (i % 30 === 0) minDet = Math.min(minDet, warp.det(warp.jacobian(p)));
+  }
+  if (touched) warped++;
+}
+const femM = measure(
+  pelvisLandmarks(
+    new Map(out.map((o) => [o.part.id, o.geom])).set('FJ3259', M.parts.get('FJ3259')),
+  ),
+);
+log(
+  `Female pelvis: ${warp.controls} control points, ${warped} structures deformed, minimum Jacobian ${minDet.toFixed(2)}`,
+);
+log('  measurement       male  female  (target ratio)');
+for (const k of Object.keys(maleM))
+  log(
+    `  ${k.padEnd(16)} ${String(maleM[k]).padStart(5)} ${String(femM[k]).padStart(6)}   ${RATIOS[k] ? '×' + RATIOS[k] + ' → ' + Math.round(maleM[k] * RATIOS[k]) : ''}`,
+  );
 
 // Concepts: male concepts without the removed parts, the HRA concepts of the imported parts, and
 // one concept per renamed part.
